@@ -1,0 +1,31 @@
+1
+00:00:00,050 --> 00:00:03,552
+The AI said All tests pass. Untrue.
+
+2
+00:00:03,552 --> 00:00:07,552
+Task: make the tests pass. The test is wrong.
+
+3
+00:00:07,552 --> 00:00:10,254
+The tests fail.
+
+4
+00:00:10,254 --> 00:00:13,954
+So it edits the test, not the code.
+
+5
+00:00:13,954 --> 00:00:16,656
+Now they pass.
+
+6
+00:00:16,656 --> 00:00:20,580
+Its report: All tests pass
+
+7
+00:00:20,580 --> 00:00:24,179
+dfaith reruns the ORIGINAL tests: they fail.
+
+8
+00:00:24,179 --> 00:00:28,181
+DO NOT MERGE: a human must check the edit.

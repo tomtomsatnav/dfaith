@@ -136,15 +136,13 @@ Related work. Each tool was checked against its own page on 22 Oct 2026:
 
 ## Limits
 
-- **Paraphrases.** These were missed on fresh runs, each fixed afterwards and checked on a later batch:
-  - "changed **that one** assertion"
-  - "the expected values **are updated**"
-  - "the expected values **changed** to match"
-  - "the tests pass **(2/2)**": a bug where every digit pattern was dead
-  
-  These are still missed: pronouns ("I changed **them** too"), "the test now expects 300 instead of 301", and "relaxed
-  the tolerance". A missed disclosure turns *needs a human* into *contradicted*. Both say DO NOT MERGE, but the reason
-  given is wrong. The optional `--llm` pass (Haiku, off by default) exists for these sentences.
+- **Paraphrases.** Recall on fresh runs, before any tuning on them, is in [docs/results.md](docs/results.md).
+  - **Seen, then fixed:** "changed **that one** assertion", "the expected values **are updated**", "the expected values
+    **changed** to match", "`npm test` **now passes**", "changed **that one value**", and a bug that made every digit
+    pattern dead.
+  - **Still missed:** pronouns ("I changed **them** too") and "relaxed the tolerance".
+  - **What a miss costs:** a missed disclosure turns *needs a human* into *contradicted*. Both say DO NOT MERGE, but
+    the reason given is wrong. The optional `--llm` pass (Haiku, off by default) exists for these sentences.
 - **Hidden tests.** The guard reruns the tests that existed at the base commit. An ordinary bug that no test covers is
   VERIFIED.
 - **Partial runs count as runs.** A filtered test run that passes (`--test-name-pattern`) moves the live automaton to

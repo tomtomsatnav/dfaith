@@ -25,33 +25,35 @@ const port = server.address().port;
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dfaith-video-'));
 const browser = await pw.chromium.launch(fs.existsSync('/opt/pw-browsers/chromium-1194/chrome-linux/chrome') ? { executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' } : {});
 const ctx = await browser.newContext({ colorScheme: 'dark', viewport: { width: W, height: H }, deviceScaleFactor: scale, recordVideo: { dir: tmp, size: { width: Math.round(W * scale), height: Math.round(H * scale) } } });
+const tVideo = Date.now(); // the recording starts with the page: cue times are measured from here, on the same clock
 const page = await ctx.newPage();
 // log every caption / overlay change with its time since the page (and so the recording) started, for subtitles and voice-over
-await page.addInitScript(() => {
-  window.__cues = []; const t0 = performance.now();
+await page.addInitScript((tVideo) => {
+  window.__cues = []; const now = () => (Date.now() - tVideo) / 1000;
   const snap = () => { const c = document.getElementById('capbar'); const g = document.getElementById('gridov'); const i = document.getElementById('installov');
     return c?.classList.contains('on') ? `cap:${c.querySelector('.n')?.textContent || '0'}|${c.textContent.replace(/^\d/, '').trim()}` : g?.classList.contains('on') ? 'grid|' : i?.classList.contains('on') ? 'install|' : 'none|'; };
-  new MutationObserver(() => { const k = snap(); const last = window.__cues[window.__cues.length - 1]; if (!last || last.k !== k) window.__cues.push({ k, t: (performance.now() - t0) / 1000 }); })
+  new MutationObserver(() => { const k = snap(); const last = window.__cues[window.__cues.length - 1]; if (!last || last.k !== k) window.__cues.push({ k, t: now() }); })
     .observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
-});
+}, tVideo);
 const t0 = Date.now();
 await page.goto(`http://127.0.0.1:${port}/?replay=${encodeURIComponent(run)}&video=1&theme=dark${v45 ? '&v45=1' : ''}${beats ? `&beats=${encodeURIComponent(beats)}` : ''}`);
 await page.waitForFunction(() => document.title === 'dfaith · done', null, { timeout: 90000 });
 await page.waitForTimeout(beats ? Math.max(1800, Number(JSON.parse(beats).install) || 0) : 1800); // hold the install line
-const cues = await page.evaluate(() => window.__cues); const endT = await page.evaluate(() => performance.now() / 1000);
+const cues = await page.evaluate(() => window.__cues); const endT = (Date.now() - tVideo) / 1000;
 await ctx.close(); await browser.close(); server.close();
 const webm = fs.readdirSync(tmp).find((f) => f.endsWith('.webm'));
 console.log(`recorded ${((Date.now() - t0) / 1000).toFixed(1)} s`);
 fs.mkdirSync(out, { recursive: true });
 const mp4 = path.join(out, `demo${suffix}.mp4`); const gif = path.join(out, `demo${suffix}.gif`);
 // trim the first 0.4 s (page load), h264 for LinkedIn/GitHub, then a palette GIF at 960 px / 12 fps
-execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', '0.4', '-i', path.join(tmp, webm), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', mp4]);
+const firstCue = cues.find((c) => !c.k.startsWith('none'))?.t ?? 0.4; const TRIM = Math.max(0, firstCue - 0.05);
+execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', TRIM.toFixed(3), '-t', (endT - TRIM + 0.2).toFixed(3), '-i', path.join(tmp, webm), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', mp4]);
 execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', mp4, '-vf', `fps=12,scale=${v45 ? 720 : 960}:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer:bayer_scale=4`, gif]);
 const dur = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', mp4], { encoding: 'utf8' }).trim();
 console.log(`wrote ${path.relative(root, mp4)} (${Number(dur).toFixed(1)} s) and ${path.relative(root, gif)} (${(fs.statSync(gif).size / 1e6).toFixed(1)} MB)`);
 fs.writeFileSync(path.join(out, 'demo-source.json'), JSON.stringify({ run, recorded_at: new Date().toISOString(), note: 'replay of a real recorded run (evals/results/runs/<run>), time-compressed; nothing on screen is mocked' }, null, 2));
 // cues -> demo<suffix>.cues.json (for scripts/voiceover.mjs) and demo<suffix>.srt (LinkedIn and YouTube accept SRT captions)
-const TRIM = 0.4; const list = [];
+const list = [];
 for (let i = 0; i < cues.length; i++) { const [kind, text] = cues[i].k.split('|'); if (kind === 'none') continue; list.push({ id: kind.startsWith('cap:') ? `cap${kind.slice(4)}` : kind, text: text || '', start: Math.max(0, cues[i].t - TRIM), end: (cues[i + 1]?.t ?? endT) - TRIM }); }
 fs.writeFileSync(path.join(out, `demo${suffix}.cues.json`), JSON.stringify(list, null, 2));
 const ts = (x) => { const ms = Math.round(x * 1000); const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); const sec = Math.floor((ms % 60000) / 1000); return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')},${String(ms % 1000).padStart(3, '0')}`; };

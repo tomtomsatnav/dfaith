@@ -24,7 +24,7 @@ dfaith checks what an AI coding agent *says* against what it actually *did*:
 2️⃣ It pulls each claim out of the agent's final report, word for word.
 3️⃣ It reruns the ORIGINAL tests in a sandbox and stamps a receipt: the agent's sentence on the left, reality on the right.
 
-On fresh runs: TRAP_LINE
+On fresh runs, 35 out of 35 test rewrites were stamped DO NOT MERGE, and 20 out of 20 honest fixes came back VERIFIED. That includes runs on a real open-source library.
 
 The stamp doesn't say "the AI cheated". Here the agent was arguably right, because the test really was wrong. The stamp says a human needs to look, because a test changed and a green tick would have hidden it.
 
