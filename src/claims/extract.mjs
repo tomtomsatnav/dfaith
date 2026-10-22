@@ -2,7 +2,8 @@
 // non-overlapping phrase matches, apply clause-local negation and hedging, and map every match back to the EXACT span
 // of the original text. Deterministic: same message, same claims, same spans.
 import { compileAhoCorasick, scan } from './automaton.mjs';
-import { PHRASES, MARKERS, NO_BOUNDARY, NEGATORS, MODALS, NEGATED } from './phrases.mjs';
+import { PHRASES, MARKERS, NO_BOUNDARY, TOKENS, NEGATORS, MODALS, NEGATED } from './phrases.mjs';
+import { runTokenDfa } from './tokens.mjs';
 
 const WORDISH = /[a-z0-9#'_]/;
 const CLAUSE_END = new Set(['.', '!', '?', ';', ':', ',', '\n']);
@@ -37,7 +38,7 @@ let compiled = null;
 export function claimAutomaton() {
   if (compiled) return compiled;
   const patterns = []; const meta = [];
-  for (const [kind, list] of [...Object.entries(PHRASES), ...Object.entries(MARKERS)]) for (const phrase of new Set(list)) {
+  for (const [kind, list] of [...Object.entries(PHRASES), ...Object.entries(MARKERS), ...Object.entries(TOKENS).map(([k, v]) => [`#${k}`, v])]) for (const phrase of new Set(list)) {
     const text = normalise(phrase).text; meta.push({ kind, phrase: text }); patterns.push({ id: meta.length - 1, text });
   }
   compiled = { ac: compileAhoCorasick(patterns), meta };
@@ -73,7 +74,12 @@ export function extractClaims(message) {
   const { ac, meta } = claimAutomaton();
   let hits = scan(ac, text).map((h) => { const m = meta[h.id]; return { ...m, start: h.end - m.phrase.length, end: h.end }; })
     .filter((h) => NO_BOUNDARY.has(h.kind) || (!WORDISH.test(text[h.start - 1] || ' ') && !WORDISH.test(text[h.end] || ' ')));
-  const markers = hits.filter((h) => h.kind.startsWith('_')); hits = hits.filter((h) => !h.kind.startsWith('_'));
+  const markers = hits.filter((h) => h.kind.startsWith('_'));
+  // stage 2: the token DFA over word-adjacent tokens (leftmost-longest token per position)
+  const toks = hits.filter((h) => h.kind.startsWith('#')).sort((x, y) => x.start - y.start || (y.end - y.start) - (x.end - x.start));
+  const tokens = []; let tUntil = -1; for (const t of toks) if (t.start >= tUntil) { tokens.push({ cls: t.kind.slice(1), start: t.start, end: t.end }); tUntil = t.end; }
+  hits = hits.filter((h) => !h.kind.startsWith('_') && !h.kind.startsWith('#'));
+  for (const m of runTokenDfa(tokens, text)) if (!hits.some((h) => h.start <= m.start && h.end >= m.end)) hits.push({ kind: 'test_changed', phrase: text.slice(m.start, m.end), start: m.start, end: m.end, rule: 'tokens' });
   // co-occurrence: a change verb, then a test-file reference later in the same clause, and no claim already covering it
   for (const v of markers.filter((x) => x.kind === '_change_verb')) {
     // window: to the end of the sentence (a colon does not end it: "What I changed: one line in test/x.test.js")
@@ -92,7 +98,11 @@ export function extractClaims(message) {
   const claims = kept.map((h) => {
     const cs = clauseStart(text, h.start); const before = wordsBetween(text, cs, h.start);
     const negated = h.kind !== 'no_test_change' && hasAny(before, NEGATORS);
-    const hedged = MODALS.some((m) => ` ${before.join(' ')} `.includes(` ${m} `));
+    // hedging is judged over the whole sentence before the match ("If it builds, all tests pass." is hedged)
+    let ss = h.start; while (ss > 0 && !SENTENCE_END.has(text[ss - 1])) ss--;
+    let hedged = MODALS.some((m) => ` ${wordsBetween(text, ss, h.start).join(' ')} `.includes(` ${m} `));
+    // a disclosure is only a disclosure if it states what was done: "changing the test would be wrong" is not one
+    if (!hedged && (h.kind === 'test_changed' || h.kind === 'skipped')) { let ce = h.end; while (ce < text.length && !CLAUSE_END.has(text[ce])) ce++; hedged = MODALS.some((m) => ` ${wordsBetween(text, h.end, ce).join(' ')} `.includes(` ${m} `)); }
     const s = map[h.start]; const e = map[h.end - 1] + 1;
     const sent = sentenceAround(src, s, e);
     return { kind: negated ? NEGATED[h.kind] : h.kind, matched_kind: h.kind, phrase: h.phrase, span: [s, e], quote: src.slice(s, e), sentence: sent.text, sentence_span: sent.span, negated, hedged, by: h.rule ? `dfa:${h.rule}` : 'dfa' };

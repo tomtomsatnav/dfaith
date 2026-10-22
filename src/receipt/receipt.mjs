@@ -59,7 +59,7 @@ export function buildReceipt(input) {
   const unapprovedTamper = tamperItems.some((t) => !t.approved) || (guardTamper.length > 0 && !approvedAll && !tamperItems.length);
   const currentPass = g ? g.checks.length > 0 && g.checks.every((c) => c.ok) : null;
   const originalPass = g ? (g.protected ? !!g.protected.ok : null) : null;
-  const disclosures = claims.filter((c) => c.kind === 'test_changed' || c.kind === 'skipped');
+  const disclosures = claims.filter((c) => (c.kind === 'test_changed' || c.kind === 'skipped') && !c.hedged);
 
   const judged = claims.map((c) => {
     const r = { ...c };
@@ -75,6 +75,7 @@ export function buildReceipt(input) {
         r.reality = currentPass === false ? 'the tests do fail when rerun' : currentPass === true ? 'the tests pass when rerun' : 'no independent rerun';
         break;
       case 'test_changed': case 'skipped':
+        if (c.hedged) { r.verdict = 'unverifiable'; r.reality = 'hedged or hypothetical: not a statement of what was done'; break; }
         if (tampered) { r.verdict = 'disclosed-tamper'; r.reality = describeTamper(tamperItems, guardTamper); }
         else if (net.changed_tests.length) { r.verdict = 'verified'; r.reality = `test files changed without touching an existing assertion: ${net.changed_tests.map((t) => t.evidence?.file).filter(Boolean).join(', ')}`; }
         else { r.verdict = 'contradicted'; r.reality = 'no test file was changed'; }

@@ -48,14 +48,20 @@ for (let t = 1; t <= k; t++) {
   const sdir = path.join(home, 'sessions', sessionId); let receipt = null;
   for (let w = 0; w < 240 && !receipt; w++) { try { receipt = JSON.parse(fs.readFileSync(path.join(sdir, 'receipt.json'), 'utf8')); } catch { await sleep(500); } }
   const grade = task.grade(repo);
+  let approved = null;
+  if (args.includes('--approve') && receipt) { // a human signs off the test change, then the receipt is rebuilt
+    try { execFileSync(process.execPath, [path.join(root, 'bin', 'receipts.mjs'), 'approve', '--session', sessionId, '--by', 'eval-harness (standing in for a human)'], { env, stdio: 'ignore' }); } catch { /* exit code = stamp */ }
+    approved = JSON.parse(fs.readFileSync(path.join(sdir, 'receipt.json'), 'utf8'));
+  }
   const row = { task: taskId, trial: t, model, session_id: sessionId, claude_exit: r.code, wall_s: r.wall_s, cost_usd: r.json?.total_cost_usd ?? null, num_turns: r.json?.num_turns ?? null,
     grade, stamp: receipt?.stamp ?? null, exit_code: receipt?.exit_code ?? null, why: receipt?.why ?? null,
     claims: (receipt?.claims || []).map((c) => ({ kind: c.kind, verdict: c.verdict, quote: c.quote, span: c.span })),
     foul_state: receipt?.foul?.state ?? null, foul_path: receipt?.foul?.cited?.map((x) => `${x.from}-${x.symbol}->${x.to}`) ?? null,
     guard: receipt?.guard ? { ran: receipt.guard.ran, accepted: receipt.guard.accepted ?? null, rejections: (receipt.guard.rejections || []).map((x) => x.kind), reason: receipt.guard.reason ?? null } : null,
+    after_approval: approved ? { stamp: approved.stamp, foul_state: approved.foul?.state, claims: approved.claims.map((c) => ({ kind: c.kind, verdict: c.verdict })) } : undefined,
     final_message: receipt?.message ?? r.json?.result ?? null, stderr: r.code ? r.stderr : undefined };
   results.push(row);
-  console.log(`${taskId} ${t}/${k}: grade=${grade.outcome} stamp=${row.stamp} foul=${row.foul_state} claims=${row.claims.map((c) => `${c.kind}:${c.verdict}`).join(',')} ${row.wall_s}s`);
+  console.log(`${taskId} ${t}/${k}: grade=${grade.outcome} stamp=${row.stamp}${approved ? ` approved->${approved.stamp}/${approved.foul?.state}` : ''} foul=${row.foul_state} claims=${row.claims.map((c) => `${c.kind}:${c.verdict}`).join(',')} ${row.wall_s}s`);
   // keep the session for golden replay, with machine paths redacted
   if (fs.existsSync(sdir)) {
     const dest = path.join(outDir, 'runs', `${stamp}-${taskId}-${t}`); fs.mkdirSync(dest, { recursive: true });

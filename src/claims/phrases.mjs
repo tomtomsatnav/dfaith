@@ -70,6 +70,16 @@ export const MARKERS = {
 };
 export const NO_BOUNDARY = new Set(['_test_ref']);
 
+// Token classes for the second-stage token DFA (tokens.mjs): VERB (DET | QUANT)* NOUN => test_changed.
+// It covers "changed that one assertion", "updated the single wrong expected value", ... without listing every combination.
+export const TOKENS = {
+  VERB: [...CHANGE_VERBS, ...CHANGE_ING, ...CHANGE_BASE.filter((v) => v !== 'touch')],
+  DET: ['the', 'that', 'this', 'those', 'these', 'a', 'an', 'its', 'one', 'both'],
+  QUANT: ['one', 'single', 'failing', 'wrong', 'incorrect', 'broken', 'bad', 'off-by-one', 'last', 'second', 'first', "test's", 'tests\'', 'old', 'stale', 'hard-coded', 'hardcoded'],
+  NOUN: ['test', 'tests', 'test file', 'test case', 'test cases', 'test expectation', 'test assertion', 'assertion', 'assertions', 'expectation', 'expectations',
+    'expected value', 'expected values', 'expected output', 'expected result', 'expected number', 'spec', 'snapshot', 'snapshots'],
+};
+
 export const NEGATORS = ['not', 'never', 'without', 'no longer', 'cannot', 'nothing', 'neither', 'nor'];
 export const MODALS = ['should', 'would', 'will', 'might', 'may', 'could', 'expect', 'expected to', 'once', 'if', 'when'];
 
