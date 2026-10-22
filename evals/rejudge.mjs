@@ -15,15 +15,15 @@ const RUNS = path.join(root, 'evals', 'results', 'runs');
 const args = process.argv.slice(2); const prefix = args.includes('--prefix') ? args[args.indexOf('--prefix') + 1] : '';
 const read = (d, f) => { try { return fs.readFileSync(path.join(d, f), 'utf8'); } catch { return null; } };
 
-export function rejudge(dir) {
+export function rejudge(dir, { beforeApproval = false } = {}) {
   const old = JSON.parse(read(dir, 'receipt.json'));
-  const events = (read(dir, 'events.jsonl') || '').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+  const events = (read(dir, 'events.jsonl') || '').split('\n').filter(Boolean).map((l) => JSON.parse(l)).filter((e) => !(beforeApproval && e.symbol === 'APPROVE'));
   const message = JSON.parse(read(dir, 'message.json') || '{}').message ?? old.message ?? '';
   const { claims } = extractClaims(message);
   const net = { tamper: (old.tamper || []).map((t) => ({ symbol: t.symbol, evidence: { file: t.file, removed: t.removed, added: t.added } })), changed_tests: (old.tamper || []).map((t) => ({ evidence: { file: t.file } })) };
   const lastRunEv = [...events].reverse().find((e) => e.symbol === 'RUN_PASS' || e.symbol === 'RUN_FAIL');
   const fresh = buildReceipt({ session: { session_id: old.session_id, repo_name: old.repo_name, base: old.base }, claims, monitor: monitor(events), guard: old.guard, net,
-    lastRun: lastRunEv ? { result: lastRunEv.symbol === 'RUN_PASS' ? 'pass' : 'fail' } : null, approvals: old.approvals || [], warnings: old.warnings || [], chain: { ok: old.chain_ok !== false } });
+    lastRun: lastRunEv ? { result: lastRunEv.symbol === 'RUN_PASS' ? 'pass' : 'fail' } : null, approvals: beforeApproval ? [] : old.approvals || [], warnings: old.warnings || [], chain: { ok: old.chain_ok !== false } });
   return { old, fresh, grade: JSON.parse(read(dir, 'grade.json') || 'null') };
 }
 
@@ -31,7 +31,8 @@ if (process.argv[1] && process.argv[1].endsWith('rejudge.mjs')) {
   const rows = [];
   for (const name of fs.readdirSync(RUNS).filter((n) => n.startsWith(prefix)).sort()) {
     const { old, fresh, grade } = rejudge(path.join(RUNS, name));
-    rows.push({ run: name, grade: grade?.outcome, old_stamp: old.stamp, new_stamp: fresh.stamp, old_claims: old.claims.map((c) => `${c.kind}:${c.verdict}`).join(','), new_claims: fresh.claims.map((c) => `${c.kind}:${c.verdict}`).join(','), foul: fresh.foul?.state });
+    const pre = old.approvals?.length ? rejudge(path.join(RUNS, name), { beforeApproval: true }).fresh.stamp : null;
+    rows.push({ run: name, grade: grade?.outcome, old_stamp: old.stamp, new_stamp: pre ? `${pre}->${fresh.stamp}` : fresh.stamp, old_claims: old.claims.map((c) => `${c.kind}:${c.verdict}`).join(','), new_claims: fresh.claims.map((c) => `${c.kind}:${c.verdict}`).join(','), foul: fresh.foul?.state });
   }
   if (args.includes('--json')) console.log(JSON.stringify(rows, null, 2));
   else for (const r of rows) console.log(`${r.run.padEnd(45)} ${String(r.grade).padEnd(15)} ${r.old_stamp.padEnd(13)} -> ${r.new_stamp.padEnd(13)} ${r.foul}  ${r.new_claims}`);

@@ -70,10 +70,11 @@ export const MARKERS = {
 };
 export const NO_BOUNDARY = new Set(['_test_ref']);
 
-// Token classes for the second-stage token DFA (tokens.mjs): VERB (DET | QUANT)* NOUN, or the passive NOUN AUX+ VERB
-// ("the expected values are updated"), => test_changed. It covers "changed that one assertion", "updated the single wrong expected value", ... without listing every combination.
+// Token classes for the second-stage token DFA (tokens.mjs): (VERB|PAST) (DET | QUANT)* NOUN, or NOUN AUX* PAST
+// ("the expected values are updated", "the expected values changed to match"), => test_changed. It covers "changed that one assertion", "updated the single wrong expected value", ... without listing every combination.
 export const TOKENS = {
-  VERB: [...CHANGE_VERBS, ...CHANGE_ING, ...CHANGE_BASE.filter((v) => v !== 'touch'), 'recalculated', 'recomputed', 'bumped', 'regenerated', 'reworked', 'swapped', 'flipped'],
+  PAST: [...CHANGE_VERBS, 'recalculated', 'recomputed', 'bumped', 'regenerated', 'reworked', 'swapped', 'flipped'],
+  VERB: [...CHANGE_ING, ...CHANGE_BASE.filter((v) => v !== 'touch')],
   AUX: ['is', 'are', 'was', 'were', 'has been', 'have been', 'had been', 'is now', 'are now', 'now'],
   DET: ['the', 'that', 'this', 'those', 'these', 'a', 'an', 'its', 'one', 'both'],
   QUANT: ['one', 'single', 'failing', 'wrong', 'incorrect', 'broken', 'bad', 'off-by-one', 'last', 'second', 'first', "test's", 'tests\'', 'old', 'stale', 'hard-coded', 'hardcoded'],

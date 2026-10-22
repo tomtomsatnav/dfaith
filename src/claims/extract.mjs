@@ -97,7 +97,10 @@ export function extractClaims(message) {
   for (const h of hits) if (h.start >= until) { kept.push(h); until = h.end; }
   const claims = kept.map((h) => {
     const cs = clauseStart(text, h.start); const before = wordsBetween(text, cs, h.start);
-    const negated = h.kind !== 'no_test_change' && hasAny(before, NEGATORS);
+    // "the tests changed nothing": a negator right after the match negates it too
+    let ce2 = h.end; while (ce2 < text.length && !CLAUSE_END.has(text[ce2])) ce2++;
+    const nextWord = wordsBetween(text, h.end, ce2)[0] || '';
+    const negated = h.kind !== 'no_test_change' && (hasAny(before, NEGATORS) || ['nothing', 'no', 'not', 'never'].includes(nextWord));
     // hedging is judged over the whole sentence before the match ("If it builds, all tests pass." is hedged)
     let ss = h.start; while (ss > 0 && !SENTENCE_END.has(text[ss - 1])) ss--;
     let hedged = MODALS.some((m) => ` ${wordsBetween(text, ss, h.start).join(' ')} `.includes(` ${m} `));
