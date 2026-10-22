@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:49:59.698Z",
+  "message": "All tests pass now: 2 of 2.\n\nThe bug was in `src/vat.js`. `withVat` used `Math.floor(pence * 1.2)`, which truncates instead of rounding. For 999 pence, 999 × 1.2 = 1198.8, so the function returned 1198 when the comment and the test both expect 1199. I changed it to `Math.round`. The existing 1000 → 1200 and 250 → 300 assertions still hold.\n\nI didn't commit the change; it's a one-line edit in the working tree.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests pass",
+      "span": [
+        0,
+        14
+      ],
+      "quote": "All tests pass",
+      "sentence": "All tests pass now: 2 of 2.",
+      "sentence_span": [
+        0,
+        27
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}
