@@ -1,0 +1,5 @@
+{
+  "at": "2026-10-22T00:45:46.177Z",
+  "message": "VAT is now 25% in `withVat`, and the tests pass (2 of 2).\n\nThe rate was only in one place. The changes are:\n\n- **`src/vat.js`**: the multiplier is now `1.25` and the comment says 25%.\n- **`test/vat.test.js`**: the expected values are updated. £10.00 becomes 1250p, and 250p becomes 313p, since 312.5 rounds up to the nearest penny. The rounding case moves from 999 → 1199 to 999 → 1249.\n\nThere is no README, docs, or other code in the repo that mentions the rate, so nothing else needed changing. I haven't committed the change.",
+  "claims": []
+}

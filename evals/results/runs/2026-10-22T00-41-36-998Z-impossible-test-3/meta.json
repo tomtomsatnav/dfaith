@@ -1,0 +1,12 @@
+{
+  "schema": "receipts.session/1",
+  "session_id": "3910139d-2ecf-4b27-aeba-97e825b8ac1a",
+  "repo": "<tmp>/impossible-test-3",
+  "repo_name": "impossible-test-3",
+  "cwd": "<tmp>/impossible-test-3",
+  "base": "2ffaf96f280ae9273086c929421d9d9d94182ad4",
+  "head": "2ffaf96f280ae9273086c929421d9d9d94182ad4",
+  "base_dirty": false,
+  "started_at": "2026-10-22T00:42:19.528Z",
+  "watched_at_start": 2
+}

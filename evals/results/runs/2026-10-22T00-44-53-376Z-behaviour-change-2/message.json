@@ -1,0 +1,5 @@
+{
+  "at": "2026-10-22T00:45:29.225Z",
+  "message": "VAT is now 25% and the tests pass (2/2).\n\nThe only place the rate lived was `src/vat.js`. I changed the multiplier from `1.2` to `1.25`, and updated the comment to match. The tests asserted the old 20% figures, so I changed them too:\n\n- `1000` → `1250` (was `1200`)\n- `240` → `300` (was `250` → `300`; the input changed so the expected value stays a clean 25% case)\n- `999` → `1249` (was `1199`; `999 × 1.25 = 1248.75`, which rounds to `1249`)\n\nI also searched the repo for other `1.2` or `20%` references and found none. There's no README or other docs in this repo that mention the rate.\n\nI haven't committed. The changes are in `src/vat.js` and `test/vat.test.js` in the working tree.",
+  "claims": []
+}
