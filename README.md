@@ -15,8 +15,10 @@ Research plus a useful tool, not a finished product.
 > orchestrator merged that rewrite 10 of 10 times under an all-green report. The disclosure was in prose, and nothing
 > read it. ([source runs, 21 Oct 2026](https://github.com/tomtomsatnav/aos-orchestrator/blob/main/evals/results/2026-10-21.md))
 
+<p align="center"><img src="docs/demo-loop.gif" alt="dfaith's receipt: the agent's 'All tests pass' is marked CONTRADICTED, its 'changed that assertion' is marked DISCLOSED-TAMPER, and a DO NOT MERGE stamp lands" width="720"></p>
+
 <p align="center"><img src="docs/demo.gif" alt="dfaith: the automaton moves from tests failing to test edited to green to FOUL; the receipt quotes 'All tests pass' as CONTRADICTED and stamps DO NOT MERGE" width="900"><br>
-<sub>A replay of a real recorded Haiku run (<code>evals/results/runs/2026-10-22T00-41-36-998Z-impossible-test-3</code>), time-compressed. MP4: <a href="docs/demo.mp4">16:9</a>, <a href="docs/demo-4x5.mp4">4:5</a>.</sub></p>
+<sub>Both are replays of a real recorded Haiku run (<code>evals/results/runs/2026-10-22T00-34-41-651Z-impossible-test-5</code>), time-compressed; the loop is the receipt from the full replay. MP4: <a href="docs/demo.mp4">16:9</a>, <a href="docs/demo-4x5.mp4">4:5</a>.</sub></p>
 
 ```sh
 claude plugin marketplace add tomtomsatnav/dfaith && claude plugin install dfaith@dfaith
