@@ -20,10 +20,10 @@ const server = createServer(); await new Promise((r) => server.listen(0, '127.0.
 const port = server.address().port;
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'receipts-video-'));
 const browser = await pw.chromium.launch(fs.existsSync('/opt/pw-browsers/chromium-1194/chrome-linux/chrome') ? { executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' } : {});
-const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, recordVideo: { dir: tmp, size: { width: 1280, height: 720 } } });
+const ctx = await browser.newContext({ colorScheme: 'dark', viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, recordVideo: { dir: tmp, size: { width: 1280, height: 720 } } });
 const page = await ctx.newPage();
 const t0 = Date.now();
-await page.goto(`http://127.0.0.1:${port}/?replay=${encodeURIComponent(run)}&video=1`);
+await page.goto(`http://127.0.0.1:${port}/?replay=${encodeURIComponent(run)}&video=1&theme=dark`);
 await page.waitForFunction(() => document.title === 'receipts · done', null, { timeout: 90000 });
 await page.waitForTimeout(2600); // hold the install line
 await ctx.close(); await browser.close(); server.close();
