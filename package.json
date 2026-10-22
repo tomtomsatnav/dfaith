@@ -1,0 +1,10 @@
+{
+  "name": "receipts",
+  "version": "0.1.0",
+  "description": "Claims vs reality for Claude Code agents: a deterministic finite automaton over hook events, a claim automaton over the final message, and a receipt backed by a sandboxed rerun of the original tests.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=18.18" },
+  "bin": { "receipts": "bin/receipts.mjs" },
+  "scripts": { "test": "node --test test/*.test.mjs" }
+}

@@ -1,0 +1,315 @@
+// Vendored from https://github.com/tomtomsatnav/aos-orchestrator
+// path: orchestrator/lib/sandbox.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// OS-level sandbox for acceptance checks (security review condition 4). Checks execute code the worker wrote, as the user,
+// so each one runs under macOS `sandbox-exec` with a generated deny-default profile:
+//   reads   system + toolchain locations, the task worktree, the private temp dir (nothing else: no ~/.ssh, ~/.aws, ~/.config,
+//           ~/.claude, ~/.gnupg, keychains, shell history, other worktrees, the engine's goal/approvals/policy state)
+//   writes  ONLY the task worktree, the per-check private TMPDIR and /dev/null
+//   network DENIED (loopback only for ports the goal names in orch.check_localhost_ports)
+// The profile text is STATIC (a function of the number of allowed ports only). Every path reaches sandbox-exec as a
+// `-D name=value` parameter through execFile, so no path from a user-controlled string is ever interpolated into the profile
+// and no shell is involved. sandbox-exec is deprecated by Apple but present; this is defense in depth, not proof.
+// LINUX: checks run under bubblewrap (`bwrap`) with an ALLOW-LIST filesystem instead of a deny-default profile: a fresh mount
+// namespace containing only read-only system dirs, the node prefix, the worktree (rw), the private TMPDIR (rw) and a tmpfs /tmp;
+// HOME, the engine state and other worktrees simply do not exist inside it. All namespaces are unshared (incl. network), the
+// environment is cleared and rebuilt from the caller's minimal env, --die-with-parent and --new-session are set. See SECURITY.md.
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+
+export const SANDBOX_EXEC = '/usr/bin/sandbox-exec';
+export const BWRAP = 'bwrap';
+/** The sandbox binary for a platform: sandbox-exec on macOS, bubblewrap on Linux (resolved via PATH), none elsewhere. */
+export const defaultSandboxBin = (platform = process.platform) => (platform === 'darwin' ? SANDBOX_EXEC : platform === 'linux' ? BWRAP : SANDBOX_EXEC);
+export const DEFAULT_SANDBOX_BIN = defaultSandboxBin();
+const SYSTEM_READ = ['/usr', '/bin', '/sbin', '/System', '/Library', '/opt/homebrew', '/private/etc', '/private/var/db', '/dev'];
+// relative to HOME and /Users/<x>: never readable, never writable, even if a broader allow (e.g. a worktree under HOME) covers them
+export const SECRET_DIRS = ['.ssh', '.aws', '.config', '.claude', '.gnupg', '.netrc', '.npmrc', '.git-credentials', '.docker', '.kube', 'Library/Keychains', 'Library/Cookies',
+  '.zsh_history', '.bash_history', '.zhistory', '.history', '.python_history', '.node_repl_history', '.zsh_sessions'];
+
+/**
+ * macOS developer directory (git, xcrun and the rest of the Command Line Tools / Xcode toolchain behind the /usr/bin shims) as
+ * [as-given, real] paths, read-only in both profiles. Stock CLT lives under /Library (already readable); GitHub's macOS runners
+ * select /Applications/Xcode_<v>.app/Contents/Developer, which no other rule covers, so without this `git` fails in the sandbox.
+ */
+let devDirCache;
+/** Only a real Xcode / Command Line Tools developer dir may become readable: .../Developer under /Library/Developer or inside any *.app/Contents (DEVELOPER_DIR is attacker-influenceable env: /Users/x/src must never be opened up). */
+export function isDeveloperDirPath(x) {
+  if (typeof x !== 'string' || !path.isAbsolute(x) || x.split('/').includes('..')) return false;
+  return /^\/Library\/Developer(\/|$)/.test(x) || /^(\/[^/]+)+\/[^/]+\.app\/Contents\/Developer$/.test(x); // an Xcode kept elsewhere (/Applications, ~/Applications, CI images) is fine; any other directory is not
+}
+export function developerDirs(env = process.env, platform = process.platform) {
+  if (platform !== 'darwin') return [];
+  if (env === process.env && devDirCache) return devDirCache;
+  let d = env.DEVELOPER_DIR || null;
+  if (!d) { try { d = execFileSync('/usr/bin/xcode-select', ['-p'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 }).trim(); } catch { d = null; } }
+  const out = [];
+  if (d && path.isAbsolute(d) && !/[\0\n]/.test(d)) { out.push(path.resolve(d)); try { out.push(fs.realpathSync(d)); } catch { /* missing: nothing more */ } }
+  const r = [...new Set(out)].filter(isDeveloperDirPath);
+  if (env === process.env) devDirCache = r;
+  return r;
+}
+/** Xcode's git/xcrun shims load frameworks from sibling dirs of Developer (<X>.app/Contents/{SharedFrameworks,Frameworks,PlugIns}): read the whole .app/Contents, nothing above it. */
+export const devReadRoot = (d) => (/^(\/[^/]+)+\/[^/]+\.app\/Contents\/Developer$/.test(d) ? path.dirname(d) : d);
+let xcrunRx;
+/** The xcrun shim caches tool lookups in <confstr DARWIN_USER_TEMP_DIR>/xcrun_db-XXXX (ignores $TMPDIR). Only files with that prefix in that one dir. */
+export function xcrunDbRegex(platform = process.platform) {
+  if (platform !== 'darwin') return '^/nonexistent-aos-sandbox$';
+  if (!xcrunRx) {
+    let d = ''; try { d = execFileSync('/usr/bin/getconf', ['DARWIN_USER_TEMP_DIR'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 }).trim(); } catch { /* no cache dir: git may print a cache warning */ }
+    xcrunRx = d && path.isAbsolute(d) ? `^${reEscape(fs.realpathSync(d))}/xcrun_db[^/]*$` : '^/nonexistent-aos-sandbox$';
+  }
+  return xcrunRx;
+}
+const devParams = (cfg) => { const [a0, b0] = cfg.developerDirs || developerDirs(); const a = a0 && devReadRoot(a0), b = b0 && devReadRoot(b0); const none = '/nonexistent-aos-sandbox'; return { DEV_DIR0: a || none, DEV_DIR1: b || a || none, XCRUN_DB_RX: cfg.xcrunDbRx || xcrunDbRegex() }; };
+
+/** Static profile text. `ports` = number of allowed loopback ports (each is the parameter PORT<i>). No caller data goes in here. */
+export function buildProfile({ ports = 0, loopback = false } = {}) {
+  const n = Math.max(0, Math.min(16, ports | 0));
+  const L = [
+    '(version 1)', '(deny default)',
+    ';; generated by orchestrator/lib/sandbox.mjs: static text; all paths are -D parameters',
+    '(allow process-exec*)', '(allow process-fork)', '(allow signal (target self))',
+    '(allow sysctl-read)', '(allow file-read-metadata)', '(allow file-ioctl)', '(allow ipc-posix-shm*)', '(allow mach-lookup)',
+    `(allow file-read* ${SYSTEM_READ.map((p) => `(subpath "${p}")`).join(' ')} (literal "/"))`,
+    '(allow file-read* (subpath (param "NODE_PREFIX")) (subpath (param "WORKTREE")) (subpath (param "TMPDIR_CHECK")) (subpath (param "TOOL_CACHE")) (subpath (param "GUARD_DIR")))', // GUARD_DIR: the engine's read-only test-harness preload (harness-guard.mjs)
+    '(allow file-read* (subpath (param "DEV_DIR0")) (subpath (param "DEV_DIR1")))',
+    '(allow file-read* file-write* (regex (param "XCRUN_DB_RX")))', // xcrun shim lookup cache (git/clang behind /usr/bin shims)
+    '(allow file-read* file-write* (subpath (param "WORKTREE")) (subpath (param "TMPDIR_CHECK")))',
+    '(allow file-write* (literal "/dev/null") (literal "/dev/tty") (literal "/dev/dtracehelper"))',
+    ';; deny AFTER the allows: later rules win',
+  ];
+  // the engine's own state, then the secret locations under each home, then re-open the private tmp dir (it lives in the goal dir)
+  L.push('(deny file-read* file-write* (subpath "/Library/Keychains") (subpath "/private/var/db/dslocal") (subpath "/private/var/db/sudo"))');
+  L.push('(deny file-read* file-write* (subpath (param "GOAL_DIR")) (subpath (param "ORCH_DIR")))');
+  for (const h of ['HOME0', 'HOME1']) for (const d of SECRET_DIRS) L.push(`(deny file-read* file-write* (subpath (string-append (param "${h}") "/${d}")))`);
+  L.push('(allow file-read* file-write* (subpath (param "WORKTREE")) (subpath (param "TMPDIR_CHECK")))');
+  for (let i = 0; i < n; i++) L.push(`(allow network-outbound (remote ip (string-append "localhost:" (param "PORT${i}"))))`);
+  // checks.allow_loopback (human-visible rule): the check may listen on and connect to 127.0.0.1 / localhost on any port; nothing else on the network.
+  // Linux: wrapBwrap always gives the check a private network namespace with only `lo` up, so allow_loopback is satisfied there by construction.
+  if (loopback) L.push('(allow network-bind (local ip "localhost:*"))', '(allow network-inbound (local ip "localhost:*"))', '(allow network-outbound (remote ip "localhost:*"))');
+  return `${L.join('\n')}\n`;
+}
+
+// ---------------------------------------------------------------- opt-in WORKER sandbox (orch.sandbox_workers / --sandbox-workers)
+// The worker is `claude -p` itself, so unlike a check it needs the network (api.anthropic.com; sandbox-exec cannot filter by
+// host), the keychain (auth: read only), its own config/session files and the policy hook's inbox. Deny-default again; the
+// point is WRITES: only the task worktree, the goal's tmp dir for the task, the approvals inbox + decision log (the hook
+// writes them), the Claude session files listed in CLAUDE_WRITE, and the system temp dirs. Everything else is read-only or
+// unreadable: the main repo working tree, other worktrees, ~/.claude/settings.json, skills, plugins, shell rc files ...
+export const WORKER_SECRET_DIRS = ['.ssh', '.aws', '.gnupg', '.config/gh', '.netrc', '.git-credentials', '.docker', '.kube', '.npmrc'];
+/** ~/.claude subpaths claude -p writes during a run (found empirically, claude 2.1.304; see README). Relative to CLAUDE_DIR. */
+export const CLAUDE_WRITE_DIRS = ['todos', 'file-history'];
+
+export function buildWorkerProfile() {
+  const L = [
+    '(version 1)', '(deny default)',
+    ';; generated by orchestrator/lib/sandbox.mjs (worker profile): static text; all paths are -D parameters',
+    '(allow process-exec*)', '(allow process-fork)', '(allow signal (target same-sandbox))',
+    '(allow sysctl-read)', '(allow file-read-metadata)', '(allow file-ioctl)', '(allow ipc-posix-shm*)', '(allow ipc-posix-sem)',
+    '(allow mach-lookup)', '(allow user-preference-read)', '(allow iokit-open)', '(allow pseudo-tty)',
+    ';; network: needed for the Anthropic API. sandbox-exec cannot restrict by host name, so ALL network is allowed',
+    '(allow network*)', '(allow system-socket)',
+    `(allow file-read* ${SYSTEM_READ.map((p) => `(subpath "${p}")`).join(' ')} (literal "/") (literal "/private/tmp") (literal "/private/var/folders"))`,
+    '(allow file-read* (subpath (param "NODE_PREFIX")) (subpath (param "CLAUDE_PREFIX")) (literal (param "CLAUDE_LINK")) (subpath (param "HOOK_DIR")) (subpath (param "DEV_DIR0")) (subpath (param "DEV_DIR1"))',
+    '  (subpath (param "WORKTREE")) (subpath (param "GIT_COMMON")) (subpath (param "TMPDIR_W")) (subpath (param "APPROVALS"))',
+    '  (subpath (param "SC_RES"))', // worker self-check responses: engine-owned, READ-only for the worker (the hook reads them; only the engine writes)
+    '  (literal (param "POLICY_FILE")) (literal (param "SETTINGS_FILE")) (literal (param "DECISION_LOG"))',
+    '  (subpath (param "CLAUDE_DIR")) (literal (param "CLAUDE_JSON")) (literal (string-append (param "CLAUDE_JSON") ".backup"))',
+    '  (subpath (string-append (param "HOME") "/Library/Keychains")) (literal (param "HOME")) (literal (param "GITCONFIG")))',
+    '(allow file-read* file-write* (subpath (param "WORKTREE")) (subpath (param "TMPDIR_W")) (subpath (param "APPROVALS")) (literal (param "DECISION_LOG"))',
+    '  (subpath (param "SYS_TMP")) (literal (param "SCRATCH_ROOT")) (subpath (param "SCRATCH_DIR")) (subpath (param "SESSION_ENV")) (subpath (param "PROJECT_DIR"))',
+    `  ${CLAUDE_WRITE_DIRS.map((d) => `(subpath (string-append (param "CLAUDE_DIR") "/${d}"))`).join(' ')}`,
+    '  (subpath (string-append (param "HOME") "/.local/state/claude")))',
+    '(allow file-read* file-write* (regex (param "XCRUN_DB_RX")))', // xcrun shim lookup cache in the per-user temp dir (git behind /usr/bin)
+    ';; the Bash tool tracks its cwd in /tmp/claude-<hex>-cwd (hard-coded /tmp, not TMPDIR)',
+    '(allow file-read* file-write* (regex #"^/private/tmp/claude-[0-9a-f]+-cwd$"))',
+    '(allow file-write* (literal "/dev/null") (literal "/dev/tty") (literal "/dev/dtracehelper") (regex #"^/dev/fd/") (regex #"^/dev/ttys"))',
+    ';; deny AFTER the allows: later rules win',
+    '(deny file-write* (subpath (string-append (param "HOME") "/Library/Keychains")) (subpath "/Library/Keychains"))',
+  ];
+  for (const d of WORKER_SECRET_DIRS) L.push(`(deny file-read* file-write* (subpath (string-append (param "HOME") "/${d}")))`);
+  // other Claude sessions' IPC: their keys (~/.claude/sessions) and sockets (/tmp/cc-socks). A worker does not need either.
+  L.push('(deny file-read* file-write* (subpath (string-append (param "CLAUDE_DIR") "/sessions")) (subpath "/private/tmp/cc-socks"))');
+  // NOT writable (a worker could plant code or config that the user's interactive sessions later load): ~/.claude/shell-snapshots
+  // (sourced by every interactive shell tool), other sessions' ~/.claude/session-env/<id>, ~/.claude.json (user-scope MCP servers),
+  // other sessions' scratchpads under /tmp/claude-<uid>/. Only this worker's own session-env/<id> and scratchpad are writable above.
+  L.push('(deny file-write* (subpath (string-append (param "CLAUDE_DIR") "/shell-snapshots")) (literal (param "CLAUDE_JSON")) (regex (param "CLAUDE_JSON_RX")))');
+  L.push('(deny network-outbound (remote unix-socket (subpath "/private/tmp/cc-socks")))');
+  return `${L.join('\n')}\n`;
+}
+
+const reEscape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** ~/.claude/projects/<slug>: claude names a project dir after the cwd with every non-alphanumeric char replaced by "-". */
+export const projectSlug = (cwd) => String(cwd).replace(/[^a-zA-Z0-9]/g, '-');
+
+/**
+ * Wrap a worker command. cfg: {worktree, tmpDir, approvalsDir, decisionLog, policyFile, settingsFile, gitCommon, hookDir,
+ * claudeBin (resolved path), home?, nodeBin?, profileDir, bin?}. Returns {bin, args, profileFile, params}.
+ */
+export function wrapWorkerCommand(argv, cfg) {
+  if (!Array.isArray(argv) || !argv.length || argv.some((a) => typeof a !== 'string')) throw new Error('sandbox: argv must be a non-empty string array');
+  if (argv[0].startsWith('-')) throw new Error('sandbox: argv[0] must not start with "-"');
+  if (/\0/.test(argv.join(''))) throw new Error('sandbox: NUL in argv');
+  for (const k of ['worktree', 'tmpDir', 'approvalsDir', 'decisionLog', 'policyFile', 'settingsFile', 'hookDir', 'profileDir']) if (!cfg[k]) throw new Error(`sandbox: worker cfg.${k} missing`);
+  const profile = buildWorkerProfile();
+  fs.mkdirSync(cfg.profileDir, { recursive: true, mode: 0o700 });
+  const file = path.join(cfg.profileDir, `worker-${crypto.createHash('sha256').update(profile).digest('hex').slice(0, 12)}.sb`);
+  if (!fs.existsSync(file)) fs.writeFileSync(file, profile, { mode: 0o600 });
+  const none = '/nonexistent-aos-sandbox';
+  const home = realDeepest(cfg.home || os.homedir());
+  const nodeBin = cfg.nodeBin || process.execPath;
+  let nodePrefix; try { nodePrefix = path.dirname(path.dirname(fs.realpathSync(nodeBin))); } catch { nodePrefix = path.dirname(path.dirname(nodeBin)); }
+  // the claude binary: its real location (e.g. ~/.local/share/claude/versions) and the symlink it was found through
+  const link = cfg.claudeBin && path.isAbsolute(cfg.claudeBin) ? path.resolve(cfg.claudeBin) : none;
+  let claudePrefix = none; try { claudePrefix = path.dirname(fs.realpathSync(link)); } catch { /* not resolvable: nothing extra readable */ }
+  const claudeJson = path.join(home, '.claude.json');
+  const wt = realDeepest(cfg.worktree);
+  const params = {
+    WORKTREE: wt, TMPDIR_W: realDeepest(cfg.tmpDir), APPROVALS: realDeepest(cfg.approvalsDir), SC_RES: cfg.selfCheckResDir ? realDeepest(cfg.selfCheckResDir) : none, DECISION_LOG: realDeepest(cfg.decisionLog),
+    POLICY_FILE: realDeepest(cfg.policyFile), SETTINGS_FILE: realDeepest(cfg.settingsFile), HOOK_DIR: realDeepest(cfg.hookDir),
+    GIT_COMMON: cfg.gitCommon ? realDeepest(cfg.gitCommon) : none, HOME: home, GITCONFIG: path.join(home, '.gitconfig'),
+    NODE_PREFIX: nodePrefix, CLAUDE_PREFIX: claudePrefix, CLAUDE_LINK: link,
+    CLAUDE_DIR: path.join(home, '.claude'), CLAUDE_JSON: claudeJson,
+    // ~/.claude.json and its atomic-write temp/lock siblings (~/.claude.json.tmp.<pid>.<ms>, ~/.claude.json.lock)
+    CLAUDE_JSON_RX: `^${reEscape(claudeJson)}(\\.(tmp|lock|backup)[^/]*)?$`,
+    PROJECT_DIR: path.join(home, '.claude', 'projects', projectSlug(wt)),
+    SYS_TMP: cfg.sysTmp ? realDeepest(cfg.sysTmp) : none, SCRATCH_ROOT: realDeepest(`/tmp/claude-${process.getuid?.() ?? 0}`), SCRATCH_DIR: realDeepest(`/tmp/claude-${process.getuid?.() ?? 0}/${projectSlug(wt)}`),
+    SESSION_ENV: path.join(home, '.claude', 'session-env', /^[0-9a-zA-Z-]{8,64}$/.test(cfg.sessionId || '') ? cfg.sessionId : 'none-aos-no-session'),
+    ...devParams(cfg),
+  };
+  const args = ['-f', file];
+  for (const [k, v] of Object.entries(params)) args.push('-D', `${k}=${v}`);
+  args.push(...argv);
+  return { bin: cfg.bin || SANDBOX_EXEC, args, profileFile: file, params };
+}
+
+/** realpath of the deepest existing ancestor + the rest (sandbox rules match real paths: /tmp -> /private/tmp). */
+export function realDeepest(p) {
+  const abs = path.resolve(String(p));
+  let cur = abs; const rest = [];
+  for (let i = 0; i < 64; i++) {
+    try { return path.join(fs.realpathSync(cur), ...rest.reverse()); } catch { rest.push(path.basename(cur)); const up = path.dirname(cur); if (up === cur) return abs; cur = up; }
+  }
+  return abs;
+}
+
+let probeCache = new Map();
+/** Does the platform's sandbox binary exist and actually apply here? -> {ok, reason?} (cached per platform+binary). */
+export function sandboxAvailable({ bin, platform = process.platform, fresh = false } = {}) {
+  bin ||= defaultSandboxBin(platform);
+  const key = `${platform}:${bin}`;
+  if (!fresh && probeCache.has(key)) return probeCache.get(key);
+  let r;
+  if (platform === 'darwin') {
+    try {
+      execFileSync(bin, ['-p', '(version 1)(deny default)(allow process-exec*)(allow file-read*)(allow sysctl-read)(allow mach-lookup)', '/usr/bin/true'], { stdio: 'ignore', timeout: 10000 });
+      r = { ok: true };
+    } catch (e) { r = { ok: false, reason: `sandbox-exec failed its probe: ${String(e.code || e.message).slice(0, 120)}` }; }
+  } else if (platform === 'linux') {
+    // run the real isolation flags once: catches a missing bwrap AND hosts that forbid unprivileged user namespaces
+    // (some containers, Ubuntu 24.04 AppArmor restriction) where bwrap exists but cannot create the sandbox.
+    try {
+      execFileSync(bin, [...BWRAP_BASE, ...bwrapSystemRoots(), '--tmpfs', '/tmp', '/usr/bin/true'], { stdio: 'pipe', timeout: 10000 });
+      r = { ok: true };
+    } catch (e) {
+      r = { ok: false, reason: e.code === 'ENOENT' ? 'bubblewrap (bwrap) is not installed; on Linux install it (e.g. apt-get install bubblewrap)'
+        : `bwrap failed its probe (user namespaces may be disabled): ${String((e.stderr || e.message || e.code)).trim().split('\n')[0].slice(0, 160)}` };
+    }
+  } else r = { ok: false, reason: `no OS sandbox for platform ${platform} (macOS sandbox-exec and Linux bubblewrap are supported)` };
+  probeCache.set(key, r);
+  return r;
+}
+/** Worker sandboxing (orch.sandbox_workers) exists on macOS only. On Linux it FAILS CLOSED: the bwrap equivalent of the macOS
+ *  profile (claude state paths, keychain-less auth, API network) is not verified against a real `claude` there. */
+export function workerSandboxAvailable(o = {}) {
+  const platform = o.platform || process.platform;
+  if (platform !== 'darwin') return { ok: false, reason: `worker sandboxing (--sandbox-workers) is not yet supported on ${platform === 'linux' ? 'Linux' : platform}; it is macOS-only. Refusing rather than running workers unsandboxed` };
+  return sandboxAvailable(o);
+}
+export const resetSandboxProbe = () => { probeCache = new Map(); };
+
+/**
+ * Write the profile once into `profileDir` (content-addressed name) and return {bin, args} for execFile/spawn.
+ * cfg: {worktree, tmpDir, goalDir?, orchDir?, home?, ports?[], profileDir, bin?, nodeBin?, extraRead?}
+ */
+export function wrapCommand(argv, cfg) {
+  if (!Array.isArray(argv) || !argv.length || argv.some((a) => typeof a !== 'string')) throw new Error('sandbox: argv must be a non-empty string array');
+  if (argv[0].startsWith('-')) throw new Error('sandbox: argv[0] must not start with "-"');
+  if (/\0/.test(argv.join(''))) throw new Error('sandbox: NUL in argv');
+  const ports = (cfg.ports || []).map(Number);
+  if (ports.some((p) => !Number.isInteger(p) || p < 1 || p > 65535)) throw new Error('sandbox: invalid localhost port');
+  if ((cfg.platform || process.platform) === 'linux') return wrapBwrap(argv, cfg);
+  const profile = buildProfile({ ports: ports.length, loopback: cfg.loopback === true });
+  const dir = cfg.profileDir;
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const file = path.join(dir, `check-${crypto.createHash('sha256').update(profile).digest('hex').slice(0, 12)}.sb`);
+  if (!fs.existsSync(file)) fs.writeFileSync(file, profile, { mode: 0o600 });
+  const nodeBin = cfg.nodeBin || process.execPath;
+  let nodePrefix; try { nodePrefix = path.dirname(path.dirname(fs.realpathSync(nodeBin))); } catch { nodePrefix = path.dirname(path.dirname(nodeBin)); }
+  const home0 = realDeepest(cfg.home || os.homedir()); const home1 = realDeepest(os.homedir());
+  const none = '/nonexistent-aos-sandbox';
+  const toolCache = cfg.toolCache || path.join(os.homedir(), '.npm');
+  const params = {
+    WORKTREE: realDeepest(cfg.worktree), TMPDIR_CHECK: realDeepest(cfg.tmpDir), GOAL_DIR: cfg.goalDir ? realDeepest(cfg.goalDir) : none, ORCH_DIR: cfg.orchDir ? realDeepest(cfg.orchDir) : none,
+    HOME0: home0, HOME1: home1, NODE_PREFIX: nodePrefix, TOOL_CACHE: realDeepest(toolCache), GUARD_DIR: cfg.extraRead ? realDeepest(cfg.extraRead) : none, ...devParams(cfg),
+  };
+  ports.forEach((p, i) => { params[`PORT${i}`] = String(p); });
+  const args = ['-f', file];
+  for (const [k, v] of Object.entries(params)) args.push('-D', `${k}=${v}`);
+  args.push(...argv);
+  return { bin: cfg.bin || SANDBOX_EXEC, args, profileFile: file, params };
+}
+
+// ---------------------------------------------------------------- Linux: bubblewrap
+const BWRAP_BASE = ['--unshare-all', '--die-with-parent', '--new-session', '--clearenv'];
+const ETC_ALLOW = ['ld.so.cache', 'ld.so.conf', 'ld.so.conf.d', 'alternatives', 'passwd', 'group', 'nsswitch.conf', 'localtime', 'ssl', 'ca-certificates', 'ca-certificates.conf', 'gitconfig'];
+
+/** Read-only system roots. Merged-usr symlinks (/bin -> usr/bin) are recreated as symlinks, real dirs are bound read-only. */
+function bwrapSystemRoots() {
+  const a = ['--ro-bind', '/usr', '/usr'];
+  for (const d of ['/bin', '/sbin', '/lib', '/lib32', '/lib64', '/libx32']) {
+    let st; try { st = fs.lstatSync(d); } catch { continue; }
+    if (st.isSymbolicLink()) a.push('--symlink', fs.readlinkSync(d), d);
+    else if (st.isDirectory()) a.push('--ro-bind', d, d);
+  }
+  for (const f of ETC_ALLOW) { const p = `/etc/${f}`; if (fs.existsSync(p)) a.push('--ro-bind', fs.realpathSync(p), p); }
+  a.push('--proc', '/proc', '--dev', '/dev');
+  return a;
+}
+
+/**
+ * bubblewrap wrapper for a check. Filesystem = allow-list (nothing but the binds below exists). Network: ALWAYS a fresh,
+ * empty network namespace (bwrap brings its loopback up), so a check can run and talk to its own servers on 127.0.0.1 but
+ * cannot reach the host's loopback or anything else. cfg.ports therefore cannot open specific HOST ports (bwrap cannot filter
+ * by port, only share the whole host network); we choose to ignore them rather than share the network.
+ * cfg: {worktree, tmpDir, goalDir?, orchDir?, home?, env?, profileDir?, bin?, nodeBin?, toolCache?}
+ */
+function wrapBwrap(argv, cfg) {
+  const wt = realDeepest(cfg.worktree); const tmp = realDeepest(cfg.tmpDir);
+  const nodeBin = cfg.nodeBin || process.execPath;
+  let nodePrefix; try { nodePrefix = path.dirname(path.dirname(fs.realpathSync(nodeBin))); } catch { nodePrefix = path.dirname(path.dirname(nodeBin)); }
+  const args = [...BWRAP_BASE, ...bwrapSystemRoots(), '--tmpfs', '/tmp'];
+  const covered = (p) => ['/usr', '/bin', '/sbin', '/lib', '/lib32', '/lib64', '/libx32'].some((r) => p === r || p.startsWith(`${r}/`));
+  if (nodePrefix !== '/' && !covered(nodePrefix) && fs.existsSync(nodePrefix)) args.push('--ro-bind', nodePrefix, nodePrefix);
+  const toolCache = cfg.toolCache || path.join(os.homedir(), '.npm');
+  if (fs.existsSync(toolCache)) args.push('--ro-bind', realDeepest(toolCache), realDeepest(toolCache));
+  if (cfg.extraRead && fs.existsSync(cfg.extraRead)) args.push('--ro-bind', realDeepest(cfg.extraRead), realDeepest(cfg.extraRead)); // the engine's read-only test-harness preload
+  args.push('--bind', wt, wt);
+  // things that must stay invisible even if the worktree contains or equals them (macOS profile: explicit denies after the allows)
+  const hidden = new Set();
+  for (const h of new Set([realDeepest(cfg.home || os.homedir()), realDeepest(os.homedir())])) for (const d of SECRET_DIRS) hidden.add(path.join(h, d));
+  for (const d of [cfg.goalDir, cfg.orchDir]) if (d) hidden.add(realDeepest(d));
+  for (const h of hidden) {
+    if (h !== wt && !h.startsWith(`${wt}/`)) continue; // not reachable inside the worktree bind: already invisible
+    let st; try { st = fs.lstatSync(h); } catch { continue; } // must exist: bwrap would create a mountpoint inside the rw worktree
+    args.push(...(st.isDirectory() ? ['--tmpfs', h] : ['--ro-bind', '/dev/null', h]));
+  }
+  args.push('--bind', tmp, tmp, '--remount-ro', '/', '--chdir', wt); // root tmpfs read-only: only the binds above and /tmp are writable
+  for (const [k, v] of Object.entries(cfg.env || {})) { if (/[=\0]/.test(k) || /\0/.test(String(v))) throw new Error('sandbox: bad env entry'); args.push('--setenv', k, String(v)); }
+  args.push('--', ...argv);
+  return { bin: cfg.bin || BWRAP, args, profileFile: null, params: { WORKTREE: wt, TMPDIR_CHECK: tmp } };
+}
