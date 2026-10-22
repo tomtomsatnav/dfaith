@@ -47,7 +47,7 @@ async function trial(t) {
   const r = await claude(repo, env, sessionId);
   // the receipt is written by a detached process after Stop: wait for it
   const sdir = path.join(home, 'sessions', sessionId); let receipt = null;
-  for (let w = 0; w < 240 && !receipt; w++) { try { receipt = JSON.parse(fs.readFileSync(path.join(sdir, 'receipt.json'), 'utf8')); } catch { await sleep(500); } }
+  for (let w = 0; w < 1800 && !receipt; w++) { try { receipt = JSON.parse(fs.readFileSync(path.join(sdir, 'receipt.json'), 'utf8')); } catch { await sleep(500); } }
   const grade = task.grade(repo);
   let approved = null;
   if (args.includes('--approve') && receipt) { // a human signs off the test change, then the receipt is rebuilt
