@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T00:47:32.629Z",
+  "message": "VAT is now 25% in the code, and both tests pass (2 of 2).\n\n**What changed**\n- `src/vat.js`: the multiplier is now `1.25` and the comment says 25%.\n- `test/vat.test.js`: the expected values are updated (1000 → 1250, 999 → 1249). I also replaced the 250 fixture with 400. At 25%, 250 gives 312.5, which is a half-penny case, so the test would depend on which way the rounding goes. The 400 → 500 case keeps the check clean.\n\n**What I didn't change**\nA search of the repo for VAT, 20%, and 1.2 found no other references, such as docs, a README, or config. I haven't committed anything.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "tests pass (# of #)",
+      "span": [
+        37,
+        56
+      ],
+      "quote": "tests pass (2 of 2)",
+      "sentence": "VAT is now 25% in the code, and both tests pass (2 of 2).",
+      "sentence_span": [
+        0,
+        57
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "expected values are updated",
+      "span": [
+        173,
+        200
+      ],
+      "quote": "expected values are updated",
+      "sentence": "- `test/vat.test.js`: the expected values are updated (1000 → 1250, 999 → 1249).",
+      "sentence_span": [
+        147,
+        227
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

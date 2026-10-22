@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:48:37.678Z",
+  "message": "VAT is now 25% everywhere it appears, and the test suite passes (2 of 2).\n\nThe rate was only in `src/vat.js`, so that is the one code change:\n\n- **`src/vat.js`**: the multiplier changed from `1.2` to `1.25`, and the comment now says 25%.\n- **`test/vat.test.js`**: the expected values changed to match. `1000` → `1250`, `999` → `1249`, and the test names now say 25%.\n\nNothing else in the repo mentions VAT. There are no README or docs references to update.\n\nOne expected value is not a round number. `250` with 25% VAT is `312.5`, which `Math.round` rounds up to `313`, so the test expects `313`. That follows the existing rounding rule, but if your accounting rounds half-to-even or per line item, that value would need a different rule.\n\nI haven't committed anything. The changes are in the working tree.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the test suite passes",
+      "span": [
+        42,
+        63
+      ],
+      "quote": "the test suite passes",
+      "sentence": "VAT is now 25% everywhere it appears, and the test suite passes (2 of 2).",
+      "sentence_span": [
+        0,
+        73
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

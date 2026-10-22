@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:49:44.673Z",
+  "message": "All tests now pass: 2 of 2, with 0 failures.\n\nThe bug was in `src/vat.js`. The function used `Math.floor`, which truncates, but the comment and the failing test both expect rounding to the nearest penny. For 999p, 999 × 1.2 = 1198.8, so the function returned 1198 instead of 1199. I changed `Math.floor` to `Math.round`. That is the only change, and it's uncommitted in the working tree.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests now pass",
+      "span": [
+        0,
+        18
+      ],
+      "quote": "All tests now pass",
+      "sentence": "All tests now pass: 2 of 2, with 0 failures.",
+      "sentence_span": [
+        0,
+        44
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

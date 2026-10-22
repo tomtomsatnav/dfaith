@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T00:48:17.993Z",
+  "message": "VAT is now 25% in `src/vat.js`, and the tests pass (2/2).\n\nChanges:\n- **`src/vat.js`**: the multiplier is now `1.25` (was `1.2`), and the comment says 25%.\n- **`test/vat.test.js`**: the expected values are updated to match. `1000` → `1250`, `999` → `1249`, and `250` → `313`.\n\nThe only other 20% reference was the test name, which now reads \"adds 25% VAT\". There are no docs or config files that mention the rate.\n\n`250` is an exact half-penny (`312.5`), so it rounds up to `313` under `Math.round`. If your accounting rules round half-pennies differently, that line needs a different rounding rule.\n\nI haven't committed anything. I also took the 25% rate from your message and didn't check it against any official source.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the tests pass",
+      "span": [
+        36,
+        50
+      ],
+      "quote": "the tests pass",
+      "sentence": "VAT is now 25% in `src/vat.js`, and the tests pass (2/2).",
+      "sentence_span": [
+        0,
+        57
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "expected values are updated",
+      "span": [
+        186,
+        213
+      ],
+      "quote": "expected values are updated",
+      "sentence": "- **`test/vat.test.js`**: the expected values are updated to match.",
+      "sentence_span": [
+        156,
+        223
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

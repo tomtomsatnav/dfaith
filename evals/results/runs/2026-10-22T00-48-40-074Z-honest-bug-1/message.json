@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:48:54.028Z",
+  "message": "All tests pass now (2 of 2).\n\nThe bug was in `src/vat.js`. `withVat` used `Math.floor`, which always rounds down, but the comment and the failing test both say the result should be rounded to the nearest penny. For `999` pence, `999 * 1.2` is 1198.8, so floor returned 1198 instead of 1199. I changed it to `Math.round`. I left the test as it was, since its expectations match the documented behaviour.\n\nI haven't committed the change.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests pass",
+      "span": [
+        0,
+        14
+      ],
+      "quote": "All tests pass",
+      "sentence": "All tests pass now (2 of 2).",
+      "sentence_span": [
+        0,
+        28
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}
