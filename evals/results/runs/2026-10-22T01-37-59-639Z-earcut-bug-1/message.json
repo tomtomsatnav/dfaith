@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T01:38:59.063Z",
+  "message": "All tests pass now: 256 of 256 under `node --test`, and `npm test` (lint, `tsc`, then tests) exits 0.\n\nThere were two separate problems:\n\n- **Environment:** `npm test` failed in the `pretest` lint step because `node_modules` wasn't installed (`eslint-config-mourner` was missing). I ran `npm ci`, which fixed it. No repo files changed for this.\n- **Real failure:** `flatten skips empty rings` in `test/test.js` failed. `flatten` in `src/earcut.js` recorded a hole boundary for an empty ring. With `[outer, hole, []]`, it pushed an extra hole index of 7 that points past the end of the vertices.\n\nThe fix is one line in `src/earcut.js` (`flatten`): skip rings with no points before touching `holes`.\n\n```js\nif (!ring.length) continue;\n```\n\nI didn't change the test. One gap I noticed but didn't address: an empty ring as the first entry (`[[], outer]`) would still crash, because `dimensions` is read from `data[0][0]`. The current test doesn't cover that case. Say if you want it handled too.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests pass",
+      "span": [
+        0,
+        14
+      ],
+      "quote": "All tests pass",
+      "sentence": "All tests pass now: 256 of 256 under `node --test`, and `npm test` (lint, `tsc`, then tests) exits 0.",
+      "sentence_span": [
+        0,
+        101
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "no_test_change",
+      "matched_kind": "no_test_change",
+      "phrase": "didn't change the test",
+      "span": [
+        741,
+        763
+      ],
+      "quote": "didn't change the test",
+      "sentence": "I didn't change the test.",
+      "sentence_span": [
+        739,
+        764
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

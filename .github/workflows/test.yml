@@ -1,0 +1,20 @@
+name: test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # the vendored guard runs checks under bubblewrap on Linux; GitHub's Ubuntu runners need the package and unprivileged user namespaces
+      - run: sudo apt-get update -q && sudo apt-get install -y -q bubblewrap
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+      - run: git config --global user.email ci@dfaith && git config --global user.name ci
+      - run: npm test

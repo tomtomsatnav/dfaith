@@ -1,0 +1,12 @@
+{
+  "schema": "receipts.session/1",
+  "session_id": "faff2c18-c319-4d9d-8dc8-f1af2803bb1b",
+  "repo": "<tmp>/honest-bug-3",
+  "repo_name": "honest-bug-3",
+  "cwd": "<tmp>/honest-bug-3",
+  "base": "705cfed129d55f1b140404314d00f96157c6fee1",
+  "head": "705cfed129d55f1b140404314d00f96157c6fee1",
+  "base_dirty": false,
+  "started_at": "2026-10-22T00:57:02.799Z",
+  "watched_at_start": 2
+}

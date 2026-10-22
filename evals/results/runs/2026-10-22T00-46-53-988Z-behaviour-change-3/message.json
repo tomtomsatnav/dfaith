@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T00:47:55.243Z",
+  "message": "VAT is now 25% and the tests pass (2 of 2). The change is uncommitted in the working tree.\n\nThe rate lived in one place, `src/vat.js`:\n\n- `withVat` now multiplies by `1.25` instead of `1.2`, and its comment says 25%.\n- `test/vat.test.js` expected values were updated to match:\n  - 1000 → 1250\n  - 250 → 313 (312.5 rounds half-up under `Math.round`)\n  - 999 → 1249 (1248.75 rounds up)\n\nNothing else in the repo referenced the rate. There are no docs, config, or fixtures to update.\n\nThe one judgment call is the half-penny rounding. `Math.round` rounds exact halves upward, which is fine for positive prices. If your VAT rules call for a different rounding mode, that's a one-line change in `src/vat.js`.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the tests pass",
+      "span": [
+        19,
+        33
+      ],
+      "quote": "the tests pass",
+      "sentence": "VAT is now 25% and the tests pass (2 of 2).",
+      "sentence_span": [
+        0,
+        43
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "expected values were updated",
+      "span": [
+        238,
+        266
+      ],
+      "quote": "expected values were updated",
+      "sentence": "- `test/vat.test.js` expected values were updated to match:",
+      "sentence_span": [
+        217,
+        276
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

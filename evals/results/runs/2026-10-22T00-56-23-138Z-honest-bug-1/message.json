@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:56:43.061Z",
+  "message": "All tests now pass: 2 of 2.\n\nThe bug was in `src/vat.js`. `withVat` used `Math.floor(pence * 1.2)`, which rounds down, but the comment above it says the result should be rounded to the nearest penny. The test `withVat(999)` expects 1199 (999 × 1.2 = 1198.8) and got 1198. I changed it to `Math.round(pence * 1.2)`.\n\nI checked the floating-point side as well. `pence * 1.2` always has a fractional part in steps of 0.2, so it can never land on an exact .5 tie, and float error can't change the rounding. I didn't commit the change.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests now pass",
+      "span": [
+        0,
+        18
+      ],
+      "quote": "All tests now pass",
+      "sentence": "All tests now pass: 2 of 2.",
+      "sentence_span": [
+        0,
+        27
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

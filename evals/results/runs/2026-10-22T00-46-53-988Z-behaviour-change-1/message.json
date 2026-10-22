@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:47:11.376Z",
+  "message": "VAT is now 25% in the code, and the tests pass (2 of 2).\n\n- **`src/vat.js`**: the multiplier changed from `1.2` to `1.25`, and the comment now says 25%.\n- **`test/vat.test.js`**: the expected values changed to match. `withVat(1000)` is now 1250, `withVat(250)` is 313 (312.5 rounds up), and `withVat(999)` is 1249 (1248.75 rounds to 1249). I renamed the first test to \"adds 25% VAT\".\n\nThe repo has no other references to the old rate: no README, docs or config. I haven't committed the changes.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the tests pass",
+      "span": [
+        32,
+        46
+      ],
+      "quote": "the tests pass",
+      "sentence": "VAT is now 25% in the code, and the tests pass (2 of 2).",
+      "sentence_span": [
+        0,
+        56
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

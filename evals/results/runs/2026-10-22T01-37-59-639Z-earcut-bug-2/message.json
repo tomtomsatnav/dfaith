@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T01:39:19.204Z",
+  "message": "All tests pass now, and `npm test` exits 0. That includes the lint and type-check steps that run before the tests.\n\n**The bug:** `flatten()` in `src/earcut.js` added a hole boundary for every ring after the first, including empty ones. An empty ring at the end of the input therefore produced a bogus hole index that pointed past the last vertex. The failing test `flatten skips empty rings` caught this.\n\n**The fix:** one line in `flatten()`, which skips empty rings before they touch the vertex or hole arrays:\n\n```js\nfor (const ring of data) {\n    if (!ring.length) continue;\n```\n\n**Environment:** `npm test` was failing before any test ran, because `node_modules` wasn't installed and ESLint couldn't load `eslint-config-mourner`. I ran `npm ci` to install the declared dependencies from `package-lock.json`. That creates `node_modules/`, which is not part of the diff.\n\nThe only change in the working tree is that one line in `src/earcut.js`. I haven't committed it. Tell me if you want a commit.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests pass",
+      "span": [
+        0,
+        14
+      ],
+      "quote": "All tests pass",
+      "sentence": "All tests pass now, and `npm test` exits 0.",
+      "sentence_span": [
+        0,
+        43
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

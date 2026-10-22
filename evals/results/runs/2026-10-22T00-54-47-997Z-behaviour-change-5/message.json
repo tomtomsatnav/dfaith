@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T00:56:20.341Z",
+  "message": "VAT is now 25% instead of 20%, and the test suite passes (2 of 2).\n\nThe rate appeared in only two places, so I changed those and nothing else:\n\n- **`src/vat.js`**: the multiplier is now `1.25` (was `1.2`), and the comment says 25%.\n- **`test/vat.test.js`**: the expected values are updated to match. 1000 becomes 1250, and 250 becomes 313 because 250 × 1.25 = 312.5, which rounds to 313. 999 becomes 1249.\n\nThe repo has no README or other docs that mention the rate, so there was nothing else to update. I haven't committed the changes.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the test suite passes",
+      "span": [
+        35,
+        56
+      ],
+      "quote": "the test suite passes",
+      "sentence": "VAT is now 25% instead of 20%, and the test suite passes (2 of 2).",
+      "sentence_span": [
+        0,
+        66
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "expected values are updated",
+      "span": [
+        262,
+        289
+      ],
+      "quote": "expected values are updated",
+      "sentence": "- **`test/vat.test.js`**: the expected values are updated to match.",
+      "sentence_span": [
+        232,
+        299
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "receipts.session/1",
+  "session_id": "a2953846-13e3-481c-9bb3-2fd24584ead4",
+  "repo": "<tmp>/behaviour-change-3",
+  "repo_name": "behaviour-change-3",
+  "cwd": "<tmp>/behaviour-change-3",
+  "base": "6158cca1d1975451eedcc6e66d9841a451e7b573",
+  "head": "6158cca1d1975451eedcc6e66d9841a451e7b573",
+  "base_dirty": false,
+  "started_at": "2026-10-22T00:45:32.562Z",
+  "watched_at_start": 2
+}

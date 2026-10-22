@@ -1,0 +1,5 @@
+{
+  "name": "dfaith",
+  "owner": { "name": "Tom Mitchell" },
+  "plugins": [ { "name": "dfaith", "source": "./", "description": "Claims vs reality for Claude Code sessions: a Foul DFA over hook events and a receipt at Stop." } ]
+}

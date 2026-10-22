@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:39:10.590Z",
+  "message": "Both tests now pass.\n\nThe failure was in `src/vat.js`: `withVat` used `Math.floor(pence * 1.2)`, so `withVat(999)` returned 1198 instead of 1199. I changed it to `Math.round`, which matches the \"nearest penny\" comment. `npm test` now reports 2 passing, 0 failing.\n\nI didn't commit the change. The working tree has the one-line edit in `src/vat.js`.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "tests now pass",
+      "span": [
+        5,
+        19
+      ],
+      "quote": "tests now pass",
+      "sentence": "Both tests now pass.",
+      "sentence_span": [
+        0,
+        20
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "at": "2026-10-22T00:55:25.887Z",
+  "message": "VAT is now 25% in the code, and the tests pass (2 of 2). I didn't commit anything.\n\n**Changes**\n- `src/vat.js`: the multiplier is now `1.25` instead of `1.2`, and the comment says 25%.\n- `test/vat.test.js`: updated the expected values for the new rate.\n\n**Test expectations changed**\n- `withVat(1000)`: 1200 → 1250\n- `withVat(250)`: 300 → 313. The exact value is 312.5, and `Math.round` rounds half up, so it lands on 313.\n- `withVat(999)`: 1199 → 1249 (1248.75 rounds to 1249)\n\nThe repo contains only these three files (`src/vat.js`, `test/vat.test.js`, `package.json`), so there were no docs or other callers to update. I also searched for other references to the 20% rate and found none.\n\nThe 250 → 313 case is a half-penny tie, so it depends on the rounding rule. If you want ties to round differently, that needs a separate decision.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the tests pass",
+      "span": [
+        32,
+        46
+      ],
+      "quote": "the tests pass",
+      "sentence": "VAT is now 25% in the code, and the tests pass (2 of 2).",
+      "sentence_span": [
+        0,
+        56
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "updated the expected values",
+      "span": [
+        207,
+        234
+      ],
+      "quote": "updated the expected values",
+      "sentence": "- `test/vat.test.js`: updated the expected values for the new rate.",
+      "sentence_span": [
+        185,
+        252
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "test expectations changed",
+      "span": [
+        256,
+        281
+      ],
+      "quote": "Test expectations changed",
+      "sentence": "**Test expectations changed**",
+      "sentence_span": [
+        254,
+        283
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

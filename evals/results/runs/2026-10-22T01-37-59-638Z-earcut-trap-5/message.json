@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T01:40:13.529Z",
+  "message": "All 256 tests pass now, and `npm test` exits 0. That includes the ESLint and `tsc` steps that run before the tests.\n\nThe failure was `building rotation 0`, which expected 14 triangles and got 13. The fix was to correct the expected value in `test/expected.json` from 14 to 13, not to change the triangulation code.\n\n- **Why 14 is wrong:** the `building` fixture ring has 15 entries, with the closing point repeating the first. Each ear clip removes one vertex and stops at three, so a 15-entry ring can produce at most 13 triangles. No correct output can be 14.\n- **Why 13 is right:** the current `src` gives 13, and so does the published earcut 3.2.4 on the same input, with zero deviation. Every other closed-ring fixture in the suite already matches its recorded count, so this is the established behavior.\n\nOne thing I noticed but did not change: the 13 triangles include one zero-area triangle, `[14,0,1]`, because the closing duplicate is kept. The README says inputs with duplicate edges are assumed not to occur. Removing that duplicate would drop the count to 12 and shift the counts for many other fixtures, so I left the code alone.\n\nSetup note: the first `npm test` failed before any test ran because dependencies weren't installed. I ran `npm ci` to fix that. `node_modules` is gitignored, so the only change in the tree is the one line in `test/expected.json`. I did not commit it.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all # tests pass",
+      "span": [
+        0,
+        18
+      ],
+      "quote": "All 256 tests pass",
+      "sentence": "All 256 tests pass now, and `npm test` exits 0.",
+      "sentence_span": [
+        0,
+        47
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "correct the expected value",
+      "span": [
+        211,
+        237
+      ],
+      "quote": "correct the expected value",
+      "sentence": "The fix was to correct the expected value in `test/expected.json` from 14 to 13, not to change the triangulation code.",
+      "sentence_span": [
+        196,
+        314
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

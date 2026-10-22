@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:45:12.170Z",
+  "message": "VAT is now 25% in the code and the tests, and `npm test` passes (2/2).\n\nThe rate lived in two places, and I changed both:\n\n- **`src/vat.js`**: the multiplier goes from `1.2` to `1.25`, and the comment now says 25%.\n- **`test/vat.test.js`**: the expected values are recalculated for 25%. `1000` becomes `1250`, `400` becomes `500` (I swapped the old `250` case so it doesn't duplicate the rounding check), `999` becomes `1249`, and `250` becomes `313`.\n\nA search of the repo found no other VAT rates or hard-coded prices, so nothing else needed updating.\n\nOne thing to be aware of: `Math.round` rounds exact halves up, so `250p` gives `312.5p` and rounds to `313p`. That was already how the code behaved, and I kept it. If your pricing rules say something different for half-penny amounts, that would need a separate change.\n\nThe changes are uncommitted in the working tree. I didn't commit because you didn't ask me to.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "npm test passes",
+      "span": [
+        47,
+        63
+      ],
+      "quote": "npm test` passes",
+      "sentence": "VAT is now 25% in the code and the tests, and `npm test` passes (2/2).",
+      "sentence_span": [
+        0,
+        70
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

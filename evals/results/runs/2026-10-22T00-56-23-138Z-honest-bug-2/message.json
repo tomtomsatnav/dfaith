@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T00:57:00.754Z",
+  "message": "All tests pass now. The suite has two tests, and both pass.\n\n**The bug:** `src/vat.js` used `Math.floor(pence * 1.2)`, which truncates. The function's comment says the result should be \"rounded to the nearest penny\", and the failing test expects `withVat(999)` to be `1199`. Truncating `1198.8` gave `1198`.\n\n**The fix:** I changed `Math.floor` to `Math.round` on that one line. I didn't change the test. Half-pence values round up under `Math.round`, which matches the usual convention for prices.\n\nI haven't committed anything. The change is a single line in `src/vat.js`, and `git diff` will show it.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests pass",
+      "span": [
+        0,
+        14
+      ],
+      "quote": "All tests pass",
+      "sentence": "All tests pass now.",
+      "sentence_span": [
+        0,
+        19
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "no_test_change",
+      "matched_kind": "no_test_change",
+      "phrase": "didn't change the test",
+      "span": [
+        381,
+        403
+      ],
+      "quote": "didn't change the test",
+      "sentence": "I didn't change the test.",
+      "sentence_span": [
+        379,
+        404
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}
