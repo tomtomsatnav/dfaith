@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { startSession, readMeta, readSnapshot, writeSnapshot, withLock, appendEvents, listWatched, readText, sessionDir } from '../src/session.mjs';
+import { startSession, readMeta, readSnapshot, writeSnapshot, readStats, writeStats, statOf, withLock, appendEvents, listWatched, readText, sessionDir } from '../src/session.mjs';
 import { classifyHookEvent } from '../src/foul/classify.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -25,9 +25,11 @@ async function main() {
   if (ev === 'SessionStart') { withLock(id, () => appendEvents(id, [{ hook: ev, symbol: 'OTHER', evidence: { source: p.source ?? null } }])); return; }
   const root = meta.repo;
   const result = withLock(id, () => {
-    const snapshot = readSnapshot(id);
-    const r = classifyHookEvent(p, { root, snapshot, listWatched: () => (root ? listWatched(root) : []), readText: (rel) => (root ? readText(root, rel) : null) });
-    writeSnapshot(id, snapshot);
+    const snapshot = readSnapshot(id); const stats = readStats(id);
+    const ctx = { root, snapshot, stats, statOf: (rel) => (root ? statOf(root, rel) : null), listWatched: () => (root ? listWatched(root) : []), readText: (rel) => (root ? readText(root, rel) : null) };
+    const r = classifyHookEvent(p, ctx);
+    if (ctx.changed) writeSnapshot(id, snapshot); // rewrite the snapshot only when a watched file actually changed
+    writeStats(id, stats);
     const recs = r.symbols.map((s) => ({ hook: ev, tool: p.tool_name ?? null, tool_use_id: p.tool_use_id ?? null, symbol: s.symbol, evidence: s.evidence }));
     for (const w of r.warnings) recs.push({ hook: ev, tool: p.tool_name ?? null, symbol: 'OTHER', evidence: { warning: w } });
     appendEvents(id, recs);

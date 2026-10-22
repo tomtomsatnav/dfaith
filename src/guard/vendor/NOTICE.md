@@ -7,7 +7,7 @@ The files in this directory are copied from **aos-orchestrator**
 
 | File | Upstream path | Changes |
 |---|---|---|
-| guard.mjs | orchestrator/lib/guard.mjs | 1 line: imports `DEFAULT_RULES` from `./default-rules.mjs` instead of `./rules.mjs` (marked `// dfaith:`) |
+| guard.mjs | orchestrator/lib/guard.mjs | 2 lines, both marked `// dfaith:`: imports `DEFAULT_RULES` from `./default-rules.mjs` instead of `./rules.mjs`; and, before the rerun, restores every protected test file from the base commit (fixtures and expected data too), not only the `.js` files that are run |
 | git.mjs | orchestrator/lib/git.mjs | none |
 | checks.mjs | orchestrator/lib/checks.mjs | none |
 | sandbox.mjs | orchestrator/lib/sandbox.mjs | none |
@@ -21,7 +21,7 @@ The files in this directory are copied from **aos-orchestrator**
 | shell.mjs | orchestrator/lib/shell.mjs | none |
 | default-rules.mjs | (new) | `DEFAULT_RULES.checks` copied verbatim from orchestrator/lib/rules.mjs, so the rules.mjs closure (schema, ctrl, policy, plan, state, selfcheck) is not vendored |
 
-Every file starts with a 3-line attribution header; apart from that and the line above, the code is byte-identical to upstream.
+Every file starts with a 3-line attribution header; apart from that and the lines above, the code is byte-identical to upstream.
 
 ## License
 

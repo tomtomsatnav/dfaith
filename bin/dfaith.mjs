@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // dfaith CLI.
-//   dfaith check   [--session ID | --latest] [--no-guard] [--unsandboxed] [--json] [--write] [--quiet]   build the receipt; exit code = stamp
+//   dfaith check   [--session ID | --latest] [--no-guard] [--unsandboxed] [--llm] [--json] [--write] [--quiet]   build the receipt; exit code = stamp
+//                  (no --session: the most recent session; --llm: also send unclassified sentences to Haiku, see src/claims/llm.mjs)
 //   dfaith approve [--session ID | --latest] [--file PATH] [--by NAME]                                     a human approves the test change
-//   dfaith serve   [--port 4320]                                                                           live automaton + dfaith in the browser
+//   dfaith serve   [--port 4320]                                                                           live automaton + receipts in the browser
 //   dfaith dfa     [--format md|dot|mermaid|json]                                                          export the Foul DFA
 //   dfaith claims  <file|->                                                                                run the claim DFA on a message
 //   dfaith list                                                                                            recent sessions
@@ -22,13 +23,14 @@ const flag = (n) => argv.includes(`--${n}`);
 const opt = (n, d = null) => { const i = argv.indexOf(`--${n}`); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : d; };
 
 function pickSession() {
-  const id = opt('session') || (flag('latest') || !opt('session') ? listSessions()[0]?.id : null);
+  const id = opt('session') || listSessions()[0]?.id;
   if (!id) { console.error('no dfaith session found (is the plugin installed, and has a session run?)'); process.exit(64); }
+  if (!opt('session') && !flag('latest') && !flag('quiet')) console.error(`(no --session given: using the most recent session, ${id})`);
   return id;
 }
 
 function writeReceipt(id, r) {
-  fs.writeFileSync(path.join(sessionDir(id), 'receipt.json'), JSON.stringify(r, null, 2));
+  const f = path.join(sessionDir(id), 'receipt.json'); fs.writeFileSync(`${f}.${process.pid}.tmp`, JSON.stringify(r, null, 2)); fs.renameSync(`${f}.${process.pid}.tmp`, f); // atomic: readers never see half a receipt
   // also an aos.verdict/1-shaped record, so the AOS dashboard's Guard view can show the stamp (opt-in: DFAITH_AOS_ORCH_DIR)
   const orch = process.env.DFAITH_AOS_ORCH_DIR;
   if (orch && r.guard?.ran) {
@@ -45,8 +47,23 @@ async function main() {
   switch (cmd) {
     case 'check': {
       const id = pickSession();
-      const r = await receiptFor(id, { guard: !flag('no-guard'), unsandboxed: flag('unsandboxed') });
-      if (flag('write')) writeReceipt(id, r);
+      // one check per session at a time: Stop fires every turn, and a sandboxed rerun can take a minute. A check that finds
+      // another one running asks it to run once more when it finishes (so the newest turn is always judged), then exits.
+      const lockFile = path.join(sessionDir(id), 'check.lock'); const again = path.join(sessionDir(id), 'check.again');
+      if (flag('write')) {
+        try { fs.writeFileSync(lockFile, String(process.pid), { flag: 'wx' }); } catch {
+          let alive = false; try { process.kill(Number(fs.readFileSync(lockFile, 'utf8')), 0); alive = true; } catch { /* stale */ }
+          if (alive) { fs.writeFileSync(again, '1'); if (!flag('quiet')) console.error('a check for this session is already running; it will run again when it finishes'); break; }
+          fs.writeFileSync(lockFile, String(process.pid));
+        }
+      }
+      let r;
+      try {
+        do { try { fs.rmSync(again, { force: true }); } catch { /* none */ }
+          r = await receiptFor(id, { guard: !flag('no-guard'), unsandboxed: flag('unsandboxed'), llm: flag('llm') || undefined });
+          if (flag('write')) writeReceipt(id, r);
+        } while (flag('write') && fs.existsSync(again));
+      } finally { if (flag('write')) fs.rmSync(lockFile, { force: true }); }
       if (!flag('quiet')) console.log(flag('json') ? JSON.stringify(r, null, 2) : renderReceipt(r));
       process.exitCode = r.exit_code;
       break;

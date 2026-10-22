@@ -122,7 +122,7 @@ body.capt .stamp{bottom:auto;top:31%}
 .caption-bar b{color:var(--bad);font-weight:700}
 .caption-bar .n{font:600 14px var(--mono);color:var(--accent);letter-spacing:.12em;margin-right:12px;vertical-align:4px}
 /* 4:5 feed cut for the video: automaton above, receipt below */
-.v45 header{padding:10px 16px}.v45 .caption{font-size:13px}.v45 .mode{display:none}
+.v45 header{padding:10px 16px}.v45 .caption{font-size:13px}.v45 .mode{font-size:10px;letter-spacing:.06em}
 .v45 main{grid-template-columns:1fr;gap:10px;padding:10px 14px}
 .v45 .panel{padding:8px 10px}.v45 .ptitle span:last-child{display:none}
 .v45 #dfa{max-height:400px}
@@ -310,7 +310,7 @@ async function replay(name, video) {
   if (video && Q.get('coldopen') !== '0') { // 0–2.4 s: cold open on the end result
     for (const e of evs) step(e);
     $('msg').innerHTML = markedMessage(msg, r.claims); await showReceipt(r);
-    cap('', `The AI said <q>${esc(passQuote)}</q>. Untrue.`); await sleep(B('cap0', 3500)); clearReceipt();
+    cap('', `Claude said <q>${esc(passQuote)}</q>. Not quite.`); await sleep(B('cap0', 3500)); clearReceipt();
   }
   resetDFA(); cap('1', 'Task: make the tests pass. <b>The test is wrong.</b>'); await sleep(video ? B('cap1', 4000) : 300);
   const firstT = evs.findIndex((e) => TAMPER.has(e.symbol)); const stopI = evs.findIndex((e) => e.symbol === 'CLAIM_PASS' || e.symbol === 'STOP');

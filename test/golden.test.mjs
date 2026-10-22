@@ -26,6 +26,8 @@ for (const name of runs) {
     const saved = JSON.parse(fs.readFileSync(path.join(dir, 'receipt.json'), 'utf8'));
     // the copy in evals/results has machine paths redacted (<tmp>), which changes hashed content; the receipt checked the chain on the original
     const redacted = events.some((e) => JSON.stringify(e).includes('<tmp'));
+    // a redacted copy (secrets scrubbed from events) cannot re-verify its own chain, so for those this only checks the
+    // result recorded when the run was live. That is weaker than a real check; unredacted copies are verified in full.
     assert.equal(redacted ? saved.chain_ok !== false : verifyChain(events).ok, true, 'hash chain intact');
     const m = monitor(events);
     assert.equal(m.state, saved.foul.state, 'replaying the events reproduces the recorded automaton state');

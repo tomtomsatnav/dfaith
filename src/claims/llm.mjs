@@ -1,5 +1,5 @@
 // OPTIONAL, OFF BY DEFAULT: send only the sentences the claim automaton could not classify (and that mention tests) to
-// Haiku, through the local `claude` CLI. Enabled by DFAITH_LLM=haiku or `dfaith check --llm`. Every claim it returns is
+// Haiku, through the local `claude` CLI. Enabled by `dfaith check --llm` or DFAITH_LLM=haiku (src/receipt/build.mjs). Every claim it returns is
 // labelled by: 'haiku' on the receipt, and its quote is the whole sentence (the model never chooses the span). If the call
 // fails, nothing is added: the deterministic result stands.
 import { execFileSync } from 'node:child_process';

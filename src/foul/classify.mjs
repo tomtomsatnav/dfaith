@@ -67,17 +67,21 @@ export function classifyHookEvent(p, ctx) {
   const rescan = (paths) => {
     const out = [];
     for (const rel of paths) {
+      // unchanged size and mtime since the last look: skip without reading (the hook runs on every Bash call)
+      const st = ctx.statOf ? ctx.statOf(rel) : undefined;
+      if (st !== undefined && ctx.stats && JSON.stringify(ctx.stats[rel] ?? null) === JSON.stringify(st) && (st === null) === !Object.prototype.hasOwnProperty.call(ctx.snapshot, rel)) continue;
+      if (ctx.stats) { if (st) ctx.stats[rel] = st; else delete ctx.stats[rel]; }
       const before = Object.prototype.hasOwnProperty.call(ctx.snapshot, rel) ? ctx.snapshot[rel] : null;
       const after = ctx.readText(rel);
       if (before === after) continue;
       out.push(...classifyFileChange(rel, before, after));
       if (after == null) delete ctx.snapshot[rel]; else ctx.snapshot[rel] = after;
+      ctx.changed = true;
     }
     return out;
   };
 
-  if (ev === 'Stop' || ev === 'SubagentStop') {
-    if (ev === 'SubagentStop') return { symbols: [{ symbol: 'OTHER', evidence: { hook: ev } }], warnings };
+  if (ev === 'Stop') {
     const msg = p.last_assistant_message ?? '';
     const { claims } = extractClaims(msg);
     const pass = claims.find((c) => c.kind === 'tests_pass' && !c.hedged);

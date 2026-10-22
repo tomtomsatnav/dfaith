@@ -39,6 +39,9 @@ function send(res, code, body, type = 'application/json') {
 
 export function createServer() {
   return http.createServer((req, res) => {
+    // local only: refuse any Host but loopback, so a page using DNS rebinding cannot read final messages or diffs
+    const host = String(req.headers.host || '').replace(/:\d+$/, '');
+    if (!['127.0.0.1', 'localhost', '[::1]'].includes(host)) return send(res, 403, { error: 'forbidden host' });
     const u = new URL(req.url, 'http://x');
     const p = u.pathname;
     try {
@@ -52,7 +55,7 @@ export function createServer() {
       if (m && !m[1].includes('..')) return send(res, 200, runPayload(m[1]));
       m = /^\/api\/stream\/([A-Za-z0-9_-]{1,128})$/.exec(p);
       if (m) {
-        const id = m[1]; const file = path.join(sessionDir(id), 'events.jsonl'); const rfile = path.join(sessionDir(id), 'receipt.json');
+        const id = m[1]; const rfile = path.join(sessionDir(id), 'receipt.json');
         res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
         let sent = 0; let receiptMtime = 0;
         const tick = () => {
@@ -60,7 +63,7 @@ export function createServer() {
           for (; sent < evs.length; sent++) res.write(`event: ev\ndata: ${JSON.stringify(slim(evs[sent]))}\n\n`);
           try { const mt = fs.statSync(rfile).mtimeMs; if (mt !== receiptMtime) { receiptMtime = mt; res.write(`event: receipt\ndata: ${JSON.stringify({ receipt: readJson(rfile), message: readJson(path.join(sessionDir(id), 'message.json')) })}\n\n`); } } catch { /* not yet */ }
         };
-        tick(); const iv = setInterval(tick, 300); void file;
+        tick(); const iv = setInterval(tick, 300);
         req.on('close', () => clearInterval(iv));
         return undefined;
       }

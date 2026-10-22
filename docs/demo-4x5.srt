@@ -1,6 +1,6 @@
 1
 00:00:00,050 --> 00:00:03,552
-The AI said All tests pass. Untrue.
+Claude said All tests pass. Not quite.
 
 2
 00:00:03,552 --> 00:00:07,552
@@ -19,13 +19,13 @@ So it edits the test, not the code.
 Now they pass.
 
 6
-00:00:16,656 --> 00:00:20,552
+00:00:16,656 --> 00:00:20,582
 Its report: All tests pass
 
 7
-00:00:20,552 --> 00:00:24,152
+00:00:20,582 --> 00:00:24,182
 dfaith reruns the ORIGINAL tests: they fail.
 
 8
-00:00:24,152 --> 00:00:28,153
+00:00:24,182 --> 00:00:28,183
 DO NOT MERGE: a human must check the edit.

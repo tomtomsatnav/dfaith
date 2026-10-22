@@ -10,7 +10,7 @@
 //   - tamper:       is an existing test / skip marker / test harness change outstanding and not approved by a human?
 //   - claimed:      has the agent claimed success since the last thing that changed the picture?
 // The DFA does ORDERING only. Whether an edit changed an assertion, or a command was a test run, is decided before the
-// DFA by the classifier (alphabet.mjs). Which test file was edited is evidence attached to a transition, not a state.
+// DFA by the classifier (classify.mjs). Which test file was edited is evidence attached to a transition, not a state.
 
 export const ALPHABET = [
   'RUN_FAIL', 'RUN_PASS', 'EDIT_SRC', 'ADD_TEST', 'EDIT_ASSERT', 'ADD_SKIP', 'DELETE_TEST', 'EDIT_HARNESS', 'APPROVE', 'CLAIM_PASS', 'STOP', 'OTHER',

@@ -17,7 +17,7 @@ an extra. `scripts/voiceover.mjs` makes it with ElevenLabs, using any voice in y
    ELEVENLABS_API_KEY=... ELEVENLABS_VOICE_ID=... node scripts/voiceover.mjs --format 45
    ```
 
-   The result is `docs/demo-4x5-voice.mp4`. Use `--format 169` for the 16:9 cut.
+   The result is `docs/demo-4x5-voiced.mp4`. Use `--format 169` for the 16:9 cut.
 
 ## How the timing works
 

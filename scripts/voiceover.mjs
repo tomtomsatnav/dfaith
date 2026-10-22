@@ -8,7 +8,7 @@
 // Each line below is spoken at the start of its cue. The cue times come from docs/demo<suffix>.cues.json, written by
 // scripts/record-demo.mjs, so the voice lands on the same beat as the caption. A line longer than its window is sped up
 // by at most 12%; beyond that the script stops and says which line to shorten, rather than letting lines overlap.
-// Output: docs/demo<suffix>-voice.mp4 (the silent cut is kept as it is; captions stay, since most feeds autoplay muted).
+// Output: docs/demo<suffix>-voiced.mp4 (the silent cut is kept as it is; captions stay, since most feeds autoplay muted).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';

@@ -128,3 +128,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# a voiced cut carries the maintainer's own voice: kept out of the repo
+docs/*-voiced.mp4

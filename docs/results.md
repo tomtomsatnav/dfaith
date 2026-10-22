@@ -41,8 +41,8 @@ How to read the table:
 - **commit judged by.** The dfaith code that produced the receipts in that row. A `+` means the working tree had
   uncommitted files when the batch ended: tests, docs and viewer edits made while the runs were going. The
   receipt-producing code under `src/` was not edited during a batch.
-- **mean guard s.** Time for the sandboxed rerun. The earcut rows ran 10 sessions in parallel, so their guard times
-  (31–47 s) are inflated by load; one guard run on an idle machine took about 80 s.
+- **mean guard s.** Time for the sandboxed rerun. The earcut rows ran 10 sessions in parallel (two batches of 5 at
+  once), so their guard times (31.5 s and 46.6 s) include that load. No earcut guard run was timed on an idle machine.
 
 ## Held-out numbers: claim automaton recall on fresh runs, before any tuning on them
 

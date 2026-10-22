@@ -7,13 +7,15 @@ import { extractClaims } from '../claims/extract.mjs';
 import { buildReceipt, netTamper } from './receipt.mjs';
 
 /** Everything needed for a receipt, from the session folder plus the repo as it is now. */
-export async function receiptFor(id, { guard = true, unsandboxed = false } = {}) {
+export async function receiptFor(id, { guard = true, unsandboxed = false, llm = process.env.DFAITH_LLM === 'haiku' } = {}) {
   const meta = readMeta(id); if (!meta) throw new Error(`no session ${id}`);
   const events = readEvents(id);
   const chain = verifyChain(events);
   let msg = { message: '', claims: [] };
   try { msg = JSON.parse(fs.readFileSync(path.join(sessionDir(id), 'message.json'), 'utf8')); } catch { /* no Stop yet */ }
   const { claims, unclassified } = extractClaims(msg.message);
+  // optional, off by default: only the sentences the automaton could not classify go to Haiku; its claims say by: 'haiku'
+  if (llm && unclassified.length) { const { classifyWithHaiku } = await import('../claims/llm.mjs'); claims.push(...classifyWithHaiku(unclassified)); }
   const mon = monitor(events.filter((e) => e.symbol));
   const baseSnap = readSnapshot(id, undefined, 'base-snapshot.json');
   const now = {};

@@ -1,7 +1,7 @@
 [
   {
     "id": "cap0",
-    "text": "The AI said All tests pass. Untrue.",
+    "text": "Claude said All tests pass. Not quite.",
     "start": 0.05000000000000002,
     "end": 3.552
   },
@@ -9,12 +9,12 @@
     "id": "cap1",
     "text": "Task: make the tests pass. The test is wrong.",
     "start": 3.552,
-    "end": 7.552
+    "end": 7.5520000000000005
   },
   {
     "id": "cap2",
     "text": "The tests fail.",
-    "start": 7.552,
+    "start": 7.5520000000000005,
     "end": 10.254
   },
   {
@@ -33,30 +33,30 @@
     "id": "cap5",
     "text": "Its report: All tests pass",
     "start": 16.656000000000002,
-    "end": 20.552000000000003
+    "end": 20.582
   },
   {
     "id": "cap6",
     "text": "dfaith reruns the ORIGINAL tests: they fail.",
-    "start": 20.552000000000003,
-    "end": 24.152
+    "start": 20.582,
+    "end": 24.182000000000002
   },
   {
     "id": "cap7",
     "text": "DO NOT MERGE: a human must check the edit.",
-    "start": 24.152,
-    "end": 28.153000000000002
+    "start": 24.182000000000002,
+    "end": 28.183
   },
   {
     "id": "grid",
     "text": "",
-    "start": 28.171000000000003,
-    "end": 30.461000000000002
+    "start": 28.201,
+    "end": 30.489
   },
   {
     "id": "install",
     "text": "",
-    "start": 30.461000000000002,
-    "end": 32.288999999999994
+    "start": 30.489,
+    "end": 32.304
   }
 ]

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// WARNING: each trial runs a real `claude -p` agent with permission to edit and run commands, unsandboxed, in a temp
+// copy of the task repo. Run evals on a throwaway machine or container.
 // Real runs: a fresh seed repo per trial, a real `claude -p --model haiku` session with dfaith loaded as a plugin, then
 // the receipt the plugin wrote at Stop. Nothing here is simulated. Usage:
 //   node evals/run.mjs --task impossible-test --k 10 [--model haiku] [--out evals/results]

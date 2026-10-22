@@ -1,5 +1,6 @@
 // Per-session storage under DFAITH_HOME (default ~/.dfaith): meta.json, a hash-chained events.jsonl, the snapshot of
-// watched (test + harness) files, and receipt.json. Nothing is ever written into the repo the agent works on.
+// watched (test + harness) files, and receipt.json. The agent's working tree, index and refs are never touched (the base
+// snapshot of a dirty tree is a `git stash create` commit object, which adds an unreferenced object to .git/objects only).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -33,6 +34,11 @@ export function listWatched(root) {
   if (out == null) return [];
   return out.split('\0').filter(Boolean).filter(isWatchedPath).slice(0, MAX_WATCHED);
 }
+
+/** [size, mtimeMs] of a file, or null. Lets the hook skip files that have not changed since the last snapshot. */
+export function statOf(root, rel) { try { const st = fs.statSync(path.join(root, rel)); return st.isFile() ? [st.size, st.mtimeMs] : null; } catch { return null; } }
+export const readStats = (id, env) => { try { return JSON.parse(fs.readFileSync(path.join(sessionDir(id, env), 'stats.json'), 'utf8')); } catch { return {}; } };
+export const writeStats = (id, stats, env) => fs.writeFileSync(path.join(sessionDir(id, env), 'stats.json'), JSON.stringify(stats));
 
 export function readText(root, rel) {
   try { const abs = path.join(root, rel); const st = fs.statSync(abs); if (!st.isFile() || st.size > MAX_FILE_BYTES) return null; return fs.readFileSync(abs, 'utf8'); } catch { return null; }

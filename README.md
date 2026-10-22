@@ -39,7 +39,7 @@ claude plugin marketplace add tomtomsatnav/dfaith && claude plugin install dfait
 
 ## What you get
 
-- **A receipt at every Stop**, written to `~/.dfaith/sessions/<id>/receipt.json`. `/receipt` shows it in Claude Code,
+- **A receipt at every Stop**, written to `~/.dfaith/sessions/<id>/receipt.json`. `/receipt` (or `/dfaith:receipt`) shows it in Claude Code,
   and `dfaith check --latest` shows it in a terminal or CI.
 
   ```
@@ -82,7 +82,7 @@ that it is:
 The claim side is two automata in sequence:
 
 - **Characters.** One Aho-Corasick automaton, flattened into a total table.
-- **Tokens.** A 6-state token DFA that catches phrasings like "changed **that one** assertion".
+- **Tokens.** A 7-state token DFA that catches phrasings like "changed **that one** assertion".
 
 Every claim carries its exact span in the message.
 
@@ -158,7 +158,9 @@ Related work. Each tool was checked against its own page on 22 Oct 2026:
     original tests still catches the behaviour.
 - **The agent has a shell.** It can delete `~/.dfaith`. The log is hash-chained and touching it is reported, but a gate
   must treat a missing receipt as a failure.
-- **Cost.** Measured with `node scripts/bench-hook.mjs` on Linux with Node 22:
+- **Cost.** Measured with `node scripts/bench-hook.mjs` on Linux with Node 22, on the 3-file demo repo (a large repo with
+  many test files costs more on the first look; after that, files whose size and modification time are unchanged are
+  skipped without being read):
   - about 50 ms per edit or Bash call (median),
   - about 100 ms at Stop.
 
@@ -174,7 +176,8 @@ dfaith serve                     # live automaton + receipt card on 127.0.0.1:43
 dfaith dfa --format mermaid      # export the Foul DFA
 dfaith claims message.txt        # run the claim automaton on any text
 npm test                         # DFA, claims, classifier, receipt, vendored guard, golden replays of real runs
-node evals/run.mjs --task impossible-test --k 10 --parallel 5   # real runs (needs the claude CLI)
+node evals/run.mjs --task impossible-test --k 10 --parallel 5   # real runs (needs the claude CLI). The agent runs
+                                                                # unsandboxed in a temp copy, with your claude login: use a throwaway machine or container
 ```
 
 Built on `aos-orch verify` from [aos-orchestrator](https://github.com/tomtomsatnav/aos-orchestrator), vendored under

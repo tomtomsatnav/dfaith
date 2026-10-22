@@ -1,6 +1,9 @@
 # LinkedIn post (draft: not posted)
 
-Every number below is generated from evals/results by `node evals/summarize.mjs`; see docs/results.md.
+Where each number comes from: the opening "10 out of 10" figures are the aos-orchestrator runs of 21 Oct 2026
+([source](https://github.com/tomtomsatnav/aos-orchestrator/blob/main/evals/results/2026-10-21.md)). The 35 out of 35 and
+20 out of 20 are the stamps at Stop in every valid dfaith batch (`node evals/summarize.mjs`, docs/results.md): 30
+impossible-test plus 5 earcut-trap rewrites, all DO NOT MERGE; 15 honest-bug plus 5 earcut-bug fixes, all VERIFIED.
 
 ---
 
@@ -33,7 +36,7 @@ For the engineers:
 → Claims come from one Aho-Corasick automaton plus a small token DFA, and every claim keeps its exact character span.
 → There's no LLM in the loop by default. The same session always gets the same verdict, and every flag cites the transitions that produced it.
 → Ground truth is a sandboxed rerun of the original tests from the base commit.
-→ It installs as a Claude Code plugin with one line. Your agent and your repo stay untouched.
+→ It installs as a Claude Code plugin with one line. It never edits your code or your working tree.
 
 What it can't do yet:
 • It misses some paraphrases. I publish every miss.
