@@ -27,7 +27,7 @@ function claude(cwd, env, sessionId) {
     const t0 = Date.now();
     const p = spawn('claude', ['-p', task.prompt, '--model', model, '--plugin-dir', root, '--session-id', sessionId, '--permission-mode', 'acceptEdits', '--allowedTools', 'Bash Edit Write Read Glob Grep', '--output-format', 'json'], { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = ''; let err = ''; p.stdout.on('data', (d) => { out += d; }); p.stderr.on('data', (d) => { err += d; });
-    const timer = setTimeout(() => p.kill('SIGTERM'), 600000);
+    const timer = setTimeout(() => p.kill('SIGTERM'), Number(opt('timeout-min', '20')) * 60000);
     p.on('close', (code) => { clearTimeout(timer); let j = null; try { j = JSON.parse(out); } catch { /* not json */ } resolve({ code, json: j, stderr: err.slice(-2000), wall_s: (Date.now() - t0) / 1000 }); });
   });
 }
@@ -37,7 +37,8 @@ const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dfaith-eval-'));
 const home = path.join(tmpRoot, 'home');
 fs.mkdirSync(path.join(outDir, 'runs'), { recursive: true });
 const results = [];
-for (let t = 1; t <= k; t++) {
+const parallel = Math.max(1, Number(opt('parallel', '1')));
+async function trial(t) {
   const repo = path.join(tmpRoot, `${taskId}-${t}`); fs.mkdirSync(repo);
   for (const [rel, text] of Object.entries(task.files)) { fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true }); fs.writeFileSync(path.join(repo, rel), text); }
   git(repo, ['init', '-q']); git(repo, ['add', '-A']); git(repo, ['-c', 'user.email=eval@dfaith', '-c', 'user.name=eval', 'commit', '-qm', 'seed']);
@@ -46,7 +47,7 @@ for (let t = 1; t <= k; t++) {
   const r = await claude(repo, env, sessionId);
   // the receipt is written by a detached process after Stop: wait for it
   const sdir = path.join(home, 'sessions', sessionId); let receipt = null;
-  for (let w = 0; w < 240 && !receipt; w++) { try { receipt = JSON.parse(fs.readFileSync(path.join(sdir, 'receipt.json'), 'utf8')); } catch { await sleep(500); } }
+  for (let w = 0; w < 1800 && !receipt; w++) { try { receipt = JSON.parse(fs.readFileSync(path.join(sdir, 'receipt.json'), 'utf8')); } catch { await sleep(500); } }
   const grade = task.grade(repo);
   let approved = null;
   if (args.includes('--approve') && receipt) { // a human signs off the test change, then the receipt is rebuilt
@@ -69,6 +70,10 @@ for (let t = 1; t <= k; t++) {
     fs.writeFileSync(path.join(dest, 'grade.json'), JSON.stringify(grade, null, 2));
   }
 }
+// trials run `parallel` at a time (each has its own seed repo and session); results are kept in trial order
+const queue = Array.from({ length: k }, (_, i) => i + 1);
+await Promise.all(Array.from({ length: Math.min(parallel, k) }, async () => { for (let t = queue.shift(); t; t = queue.shift()) await trial(t); }));
+results.sort((a, b) => a.trial - b.trial);
 const file = path.join(outDir, `${stamp}-${taskId}-${model}.json`);
 fs.writeFileSync(file, JSON.stringify({ generated_at: new Date().toISOString(), dfaith_commit: git(root, ['rev-parse', 'HEAD']), dfaith_dirty: git(root, ['status', '--porcelain']).length > 0, claude_version: execFileSync('claude', ['--version'], { encoding: 'utf8' }).trim(), task: taskId, model, k, prompt: task.prompt, results }, null, 2));
 console.log(`wrote ${path.relative(root, file)}`);

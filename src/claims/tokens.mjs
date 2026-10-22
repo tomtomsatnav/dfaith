@@ -3,22 +3,25 @@
 //   active:      (VERB | PAST) (DET | QUANT)* NOUN   "changed that one assertion", "updating the expected values"
 //   passive:     NOUN AUX+ PAST                      "the expected values are updated", "the test was rewritten"
 //   intransitive:  NOUN PAST                           "the expected values changed to match"
+//   not a match:  DET (VERB|PAST) ...                 "the correct value", "the changed test" (adjectives)
 // PAST = past forms (changed, updated, ...); VERB = base and -ing forms, which only start the active form.
 // GAP is anything else between two tokens (another word, punctuation): it resets the machine.
 export const TOKEN_DFA = Object.freeze({
   name: 'claim-tokens',
-  states: ['S', 'V', 'D', 'N', 'A', 'ACCEPT'],
+  // SD = "just read a determiner": a verb form there is an adjective ("the correct value", "the changed test"), not a change
+  states: ['S', 'SD', 'V', 'D', 'N', 'A', 'ACCEPT'],
   alphabet: ['VERB', 'PAST', 'DET', 'QUANT', 'NOUN', 'AUX', 'GAP'],
   start: 'S',
   delta: {
-    S: { VERB: 'V', PAST: 'V', DET: 'S', QUANT: 'S', NOUN: 'N', AUX: 'S', GAP: 'S' },
+    S: { VERB: 'V', PAST: 'V', DET: 'SD', QUANT: 'S', NOUN: 'N', AUX: 'S', GAP: 'S' },
+    SD: { VERB: 'S', PAST: 'S', DET: 'SD', QUANT: 'SD', NOUN: 'N', AUX: 'S', GAP: 'S' },
     V: { VERB: 'V', PAST: 'V', DET: 'D', QUANT: 'D', NOUN: 'ACCEPT', AUX: 'S', GAP: 'S' },
     D: { VERB: 'V', PAST: 'V', DET: 'D', QUANT: 'D', NOUN: 'ACCEPT', AUX: 'S', GAP: 'S' },
-    N: { VERB: 'V', PAST: 'ACCEPT', DET: 'S', QUANT: 'S', NOUN: 'N', AUX: 'A', GAP: 'S' },
-    A: { VERB: 'S', PAST: 'ACCEPT', DET: 'S', QUANT: 'S', NOUN: 'N', AUX: 'A', GAP: 'S' },
-    ACCEPT: { VERB: 'V', PAST: 'V', DET: 'S', QUANT: 'S', NOUN: 'N', AUX: 'S', GAP: 'S' },
+    N: { VERB: 'V', PAST: 'ACCEPT', DET: 'SD', QUANT: 'S', NOUN: 'N', AUX: 'A', GAP: 'S' },
+    A: { VERB: 'S', PAST: 'ACCEPT', DET: 'SD', QUANT: 'S', NOUN: 'N', AUX: 'A', GAP: 'S' },
+    ACCEPT: { VERB: 'V', PAST: 'V', DET: 'SD', QUANT: 'S', NOUN: 'N', AUX: 'S', GAP: 'S' },
   },
-  output: { S: 'none', V: 'none', D: 'none', N: 'none', A: 'none', ACCEPT: 'match' },
+  output: { S: 'none', SD: 'none', V: 'none', D: 'none', N: 'none', A: 'none', ACCEPT: 'match' },
 });
 
 /** tokens: [{cls, start, end}] sorted and non-overlapping. Returns [{start, end, form: 'active'|'passive'}]. */
