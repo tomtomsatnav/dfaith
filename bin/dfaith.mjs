@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// receipts CLI.
-//   receipts check   [--session ID | --latest] [--no-guard] [--unsandboxed] [--json] [--write] [--quiet]   build the receipt; exit code = stamp
-//   receipts approve [--session ID | --latest] [--file PATH] [--by NAME]                                     a human approves the test change
-//   receipts serve   [--port 4320]                                                                           live automaton + receipts in the browser
-//   receipts dfa     [--format md|dot|mermaid|json]                                                          export the Foul DFA
-//   receipts claims  <file|->                                                                                run the claim DFA on a message
-//   receipts list                                                                                            recent sessions
+// dfaith CLI.
+//   dfaith check   [--session ID | --latest] [--no-guard] [--unsandboxed] [--json] [--write] [--quiet]   build the receipt; exit code = stamp
+//   dfaith approve [--session ID | --latest] [--file PATH] [--by NAME]                                     a human approves the test change
+//   dfaith serve   [--port 4320]                                                                           live automaton + dfaith in the browser
+//   dfaith dfa     [--format md|dot|mermaid|json]                                                          export the Foul DFA
+//   dfaith claims  <file|->                                                                                run the claim DFA on a message
+//   dfaith list                                                                                            recent sessions
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -23,19 +23,19 @@ const opt = (n, d = null) => { const i = argv.indexOf(`--${n}`); return i >= 0 &
 
 function pickSession() {
   const id = opt('session') || (flag('latest') || !opt('session') ? listSessions()[0]?.id : null);
-  if (!id) { console.error('no receipts session found (is the plugin installed, and has a session run?)'); process.exit(64); }
+  if (!id) { console.error('no dfaith session found (is the plugin installed, and has a session run?)'); process.exit(64); }
   return id;
 }
 
 function writeReceipt(id, r) {
   fs.writeFileSync(path.join(sessionDir(id), 'receipt.json'), JSON.stringify(r, null, 2));
-  // also an aos.verdict/1-shaped record, so the AOS dashboard's Guard view can show the stamp (opt-in: RECEIPTS_AOS_ORCH_DIR)
-  const orch = process.env.RECEIPTS_AOS_ORCH_DIR;
+  // also an aos.verdict/1-shaped record, so the AOS dashboard's Guard view can show the stamp (opt-in: DFAITH_AOS_ORCH_DIR)
+  const orch = process.env.DFAITH_AOS_ORCH_DIR;
   if (orch && r.guard?.ran) {
     const d = new Date(); const vid = `v-${d.toISOString().slice(0, 10).replace(/-/g, '')}-${d.toISOString().slice(11, 19).replace(/:/g, '')}-${Math.random().toString(16).slice(2, 8).padEnd(6, '0')}`;
     const rec = { schema: 'aos.verdict/1', id: vid, created_at: d.toISOString(), repo: readMeta(id)?.repo, repo_name: r.repo_name, base: r.base, base_ref: null, tree: 'working', accepted: r.stamp === 'VERIFIED', integrity: r.tamper.length > 0,
-      rejections: r.stamp === 'VERIFIED' ? [] : [{ kind: `receipts_${r.stamp.toLowerCase()}`, detail: r.why.slice(0, 300) }], warnings: r.notes.slice(0, 20).map((n) => n.slice(0, 200)), failing_tests: (r.guard.failing_tests || []).slice(0, 20).map((t) => `${t.file ? `${t.file}: ` : ''}${t.name}`.slice(0, 200)),
-      checks: (r.guard.checks || []).map((c) => ({ argv: String(c.argv).slice(0, 200), ok: !!c.ok, exit_code: null, duration_ms: 0 })), duration_ms: r.guard.duration_ms || 0, source: 'hook', session_id: id.slice(0, 64), tool_version: 'receipts/0.1.0' };
+      rejections: r.stamp === 'VERIFIED' ? [] : [{ kind: `dfaith_${r.stamp.toLowerCase()}`, detail: r.why.slice(0, 300) }], warnings: r.notes.slice(0, 20).map((n) => n.slice(0, 200)), failing_tests: (r.guard.failing_tests || []).slice(0, 20).map((t) => `${t.file ? `${t.file}: ` : ''}${t.name}`.slice(0, 200)),
+      checks: (r.guard.checks || []).map((c) => ({ argv: String(c.argv).slice(0, 200), ok: !!c.ok, exit_code: null, duration_ms: 0 })), duration_ms: r.guard.duration_ms || 0, source: 'hook', session_id: id.slice(0, 64), tool_version: 'dfaith/0.1.0' };
     fs.mkdirSync(path.join(orch, 'verdicts'), { recursive: true, mode: 0o700 });
     fs.writeFileSync(path.join(orch, 'verdicts', `${vid}.json`), JSON.stringify(rec, null, 2), { mode: 0o600 });
   }
@@ -53,7 +53,7 @@ async function main() {
     }
     case 'approve': {
       const id = pickSession(); const file = opt('file');
-      withLock(id, () => appendEvents(id, [{ hook: 'receipts-approve', symbol: 'APPROVE', evidence: { file, by: opt('by') || os.userInfo().username, via: 'cli' } }]));
+      withLock(id, () => appendEvents(id, [{ hook: 'dfaith-approve', symbol: 'APPROVE', evidence: { file, by: opt('by') || os.userInfo().username, via: 'cli' } }]));
       const r = await receiptFor(id); writeReceipt(id, r);
       console.log(renderReceipt(r)); process.exitCode = r.exit_code;
       break;
@@ -79,7 +79,7 @@ async function main() {
       break;
     }
     default:
-      console.log('usage: receipts check|approve|serve|dfa|claims|list  (see bin/receipts.mjs)'); process.exitCode = cmd ? 64 : 0;
+      console.log('usage: dfaith check|approve|serve|dfa|claims|list  (see bin/dfaith.mjs)'); process.exitCode = cmd ? 64 : 0;
   }
 }
 

@@ -1,4 +1,4 @@
-// Per-session storage under RECEIPTS_HOME (default ~/.receipts): meta.json, a hash-chained events.jsonl, the snapshot of
+// Per-session storage under DFAITH_HOME (default ~/.dfaith): meta.json, a hash-chained events.jsonl, the snapshot of
 // watched (test + harness) files, and receipt.json. Nothing is ever written into the repo the agent works on.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -7,11 +7,11 @@ import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { isWatchedPath } from './foul/paths.mjs';
 
-export const SCHEMA_SESSION = 'receipts.session/1';
+export const SCHEMA_SESSION = 'dfaith.session/1';
 export const MAX_FILE_BYTES = 1024 * 1024;
 export const MAX_WATCHED = 2000;
 
-export const home = (env = process.env) => env.RECEIPTS_HOME || path.join(os.homedir(), '.receipts');
+export const home = (env = process.env) => env.DFAITH_HOME || path.join(os.homedir(), '.dfaith');
 const SID = /^[A-Za-z0-9_-]{1,128}$/;
 export function sessionDir(id, env = process.env) {
   if (!SID.test(String(id))) throw new Error(`invalid session id ${JSON.stringify(String(id).slice(0, 40))}`);

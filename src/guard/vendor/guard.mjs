@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/guard.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // Guard mode: judge a finished tree (any agent's work, no orchestration) against its base commit with the engine's own guardrails.
 //   1. the tree is copied into a private scratch git repo (bounded; the agent's .git, hooks and config are never used to run anything)
 //   2. anti-cheat diff analysis of base..tree (lib/anticheat.mjs analyzeDiff: deleted / skipped / weakened tests, config tamper, harness tamper, literal copy)
@@ -20,7 +20,7 @@ import { listTestFiles, runnerFor } from './protect.mjs';
 import { attemptDiff, analyzeDiff, failsOf, forceTapArgv, parseTestSummary, summaryOfRun, mergeBaselineRuns, judgeRun, checkKey, isTestRunArgv, staticTestCount, failingTests, failingTestsLine, readTestFiles } from './anticheat.mjs';
 import * as HG from './harness-guard.mjs';
 import { PROFILES } from './profiles.mjs';
-import { DEFAULT_RULES } from './default-rules.mjs'; // receipts: was './rules.mjs' (only DEFAULT_RULES.checks is used; avoids rules.mjs's schema/ctrl/policy/plan/state/selfcheck closure)
+import { DEFAULT_RULES } from './default-rules.mjs'; // dfaith: was './rules.mjs' (only DEFAULT_RULES.checks is used; avoids rules.mjs's schema/ctrl/policy/plan/state/selfcheck closure)
 
 export const LIMITS = Object.freeze({ files: 5000, file_bytes: 10 * 1024 * 1024, total_bytes: 200 * 1024 * 1024 });
 const BASELINE_RUNS = 2; // as the engine: the larger of two base-commit counts wins
@@ -195,7 +195,7 @@ export async function verifyTree(opts) {
     if (protJs.length) {
       const pr = { ok: true, files: protJs.length, not_executed: protOther.slice(0, 20) };
       try {
-        for (const f of [...protJs, ...protOther]) { const b = await G.showBlob(S, baseSha, f); if (b) { fs.mkdirSync(path.dirname(path.join(S, f)), { recursive: true }); fs.writeFileSync(path.join(S, f), b); } } // receipts: restore ALL original test files (fixtures, expected data, snapshots), not only the .js ones that are run
+        for (const f of [...protJs, ...protOther]) { const b = await G.showBlob(S, baseSha, f); if (b) { fs.mkdirSync(path.dirname(path.join(S, f)), { recursive: true }); fs.writeFileSync(path.join(S, f), b); } } // dfaith: restore ALL original test files (fixtures, expected data, snapshots), not only the .js ones that are run
         const r = await runCheck({ argv: forceTapArgv(['node', '--test', ...protJs]), timeout_s: Math.min(R.max_timeout_s || 600, 600) }, { cwd: S, env: cenv('protected'), ...sbx('protected') });
         const sm = parseTestSummary(r.summary_text ?? r.output);
         pr.ok = r.ok; if (sm) { pr.tests = sm.tests; pr.pass = sm.pass; }

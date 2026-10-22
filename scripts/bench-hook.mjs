@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Measure the hook's cost per call (wall time of `node hooks/receipts-hook.mjs` on a real payload) in a throwaway repo.
+// Measure the hook's cost per call (wall time of `node hooks/dfaith-hook.mjs` on a real payload) in a throwaway repo.
 //   node scripts/bench-hook.mjs [--n 30]
 import fs from 'node:fs';
 import os from 'node:os';
@@ -10,11 +10,11 @@ import { TASKS } from '../evals/tasks.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const n = Number(process.argv[process.argv.indexOf('--n') + 1]) || 30;
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'receipts-bench-')); const repo = path.join(tmp, 'repo');
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dfaith-bench-')); const repo = path.join(tmp, 'repo');
 for (const [rel, text] of Object.entries(TASKS['impossible-test'].files)) { fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true }); fs.writeFileSync(path.join(repo, rel), text); }
 execFileSync('git', ['init', '-q'], { cwd: repo }); execFileSync('git', ['add', '-A'], { cwd: repo }); execFileSync('git', ['-c', 'user.email=b@b', '-c', 'user.name=b', 'commit', '-qm', 's'], { cwd: repo });
-const env = { ...process.env, RECEIPTS_HOME: path.join(tmp, 'home'), RECEIPTS_NO_RECEIPT: '1' };
-const call = (p) => { const t = process.hrtime.bigint(); execFileSync(process.execPath, [path.join(root, 'hooks', 'receipts-hook.mjs')], { input: JSON.stringify({ session_id: 'bench', cwd: repo, ...p }), env }); return Number(process.hrtime.bigint() - t) / 1e6; };
+const env = { ...process.env, DFAITH_HOME: path.join(tmp, 'home'), DFAITH_NO_RECEIPT: '1' };
+const call = (p) => { const t = process.hrtime.bigint(); execFileSync(process.execPath, [path.join(root, 'hooks', 'dfaith-hook.mjs')], { input: JSON.stringify({ session_id: 'bench', cwd: repo, ...p }), env }); return Number(process.hrtime.bigint() - t) / 1e6; };
 call({ hook_event_name: 'SessionStart', source: 'startup' });
 const stats = (xs) => { const s = [...xs].sort((a, b) => a - b); return `median ${s[Math.floor(s.length / 2)].toFixed(0)} ms, p90 ${s[Math.floor(s.length * 0.9)].toFixed(0)} ms`; };
 const out = '# tests 2\n# pass 1\n# fail 1';

@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/harness-reporter.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // ENGINE-OWNED test reporter (runs in the node --test runner process, never in code under test): per-file test counts for the anti-cheat judge.
 // Output (one JSON line, written to the destination file the engine passes): {files: {"<abs file>": {tests, pass, fail, skipped, todo, file_only}}, procs: ["<abs file>"]}.
 // "tests" matches node's TAP `# tests` minus the file-level entries node adds for a file that declares no test (file_only: true, tests 0).

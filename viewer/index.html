@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
-<title>receipts</title>
+<title>dfaith</title>
 <style>
 :root{
   /* palette from the AOS dashboard theme (agent-orchestration-standard ui/theme.css), so the family looks like one family */
@@ -139,7 +139,7 @@ body.capt .stamp{bottom:auto;top:31%}
 </head>
 <body>
 <header>
-  <div class="brand">receipts<b>.</b></div>
+  <div class="brand">dfaith<b>.</b></div>
   <div class="caption" id="caption">Claims vs reality for Claude Code agents</div>
   <div class="mode" id="mode"></div>
   <select id="picker" aria-label="session"></select>
@@ -164,7 +164,7 @@ body.capt .stamp{bottom:auto;top:31%}
 <div class="caption-bar" id="capbar" aria-live="polite"></div>
 <div class="overlay" id="gridov"><div class="gridtitle" id="gridtitle"></div><div class="gridsub" id="gridsub"></div><div class="grid" id="grid"></div></div>
 <div class="overlay" id="installov">
-  <div class="install"><span class="pr">$</span> claude plugin marketplace add tomtomsatnav/receipts &amp;&amp; claude plugin install receipts@receipts</div>
+  <div class="install"><span class="pr">$</span> claude plugin marketplace add tomtomsatnav/dfaith &amp;&amp; claude plugin install dfaith@dfaith</div>
   <div class="tag">Deterministic. Every flag cites a transition and a quoted span. <b>Only the receipt can block.</b></div>
 </div>
 <script>
@@ -324,7 +324,7 @@ async function replay(name, video) {
   cap('7', r.stamp === 'NEEDS_HUMAN' ? 'Verdict: <b>DO NOT MERGE</b>. It admitted the change, so a human decides.' : `Verdict: <b>${esc(r.stamp_label)}</b>`);
   await sleep(video ? 2200 : 300);
   if (video) { cap('', ''); await showGrid(name.replace(/-\d+$/, ''), { pace: 140 }); await sleep(2200); $('gridov').classList.remove('on'); $('installov').classList.add('on'); }
-  document.title = 'receipts · done';
+  document.title = 'dfaith · done';
 }
 
 // ---- live: follow a session as its hooks write events

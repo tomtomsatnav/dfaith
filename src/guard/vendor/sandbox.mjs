@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/sandbox.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // OS-level sandbox for acceptance checks (security review condition 4). Checks execute code the worker wrote, as the user,
 // so each one runs under macOS `sandbox-exec` with a generated deny-default profile:
 //   reads   system + toolchain locations, the task worktree, the private temp dir (nothing else: no ~/.ssh, ~/.aws, ~/.config,

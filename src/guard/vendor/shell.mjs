@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/shell.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // Conservative shell command tokeniser for the policy engine. It does not execute anything.
 // Splits on ; && || | & newline (outside quotes), strips quotes/escapes, extracts redirections,
 // and flags constructs it cannot reason about (substitution, expansion, heredoc, subshell).

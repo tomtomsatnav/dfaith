@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/harness-preload.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // ENGINE-OWNED preload for every node:test check the engine runs (`node --import <this file> --test ...`). A copy of this file lives in a read-only dir
 // outside the worktree (lib/harness-guard.mjs). It runs BEFORE any worker-written code, in every test-file process, and:
 //   1. snapshots node:assert, node:assert/strict and node:test (CJS export objects, their ESM namespaces, the exported functions) and FREEZES the export objects,

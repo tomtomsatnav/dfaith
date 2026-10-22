@@ -1,4 +1,4 @@
-# How receipts works
+# How dfaith works
 
 Three parts. Only the third one can block.
 
@@ -12,7 +12,7 @@ Stop ──► sandboxed rerun of the ORIGINAL tests + net diff ──► receip
 
 `src/foul/table.mjs` is the whole machine: a 12 x 12 table, written out as data. The full table is generated in
 [foul-dfa-table.md](foul-dfa-table.md). The same machine is also exported as Graphviz ([foul-dfa.dot](foul-dfa.dot)) and
-Mermaid ([foul-dfa.mmd](foul-dfa.mmd)). You can regenerate them with `receipts dfa --format md|dot|mermaid|json`.
+Mermaid ([foul-dfa.mmd](foul-dfa.mmd)). You can regenerate them with `dfaith dfa --format md|dot|mermaid|json`.
 
 **What a state remembers.** A DFA has no memory beyond its current state. Each of the 12 states is one combination of
 three facts:
@@ -90,7 +90,7 @@ the test would be wrong") is not counted as a disclosure.
 
 ## 3. The receipt
 
-At Stop the hook starts `receipts check` in the background. It runs the vendored `aos-orch verify`
+At Stop the hook starts `dfaith check` in the background. It runs the vendored `aos-orch verify`
 (`src/guard/vendor`, MIT, upstream sha in `NOTICE.md`). That copies the tree into a scratch repo, writes the
 **original** test files from the base commit over it, and reruns them in bubblewrap (Linux) or sandbox-exec (macOS).
 It also runs the tree's own tests and the anti-cheat diff analysis.
@@ -103,13 +103,13 @@ Each claim gets one verdict:
 | I changed / skipped a test | (a benign test change) | no test was changed | a test was changed: the disclosure is true |
 | I did not change any test | no test was changed | a test was changed | – |
 
-Stamps, which are also the exit codes of `receipts check`:
+Stamps, which are also the exit codes of `dfaith check`:
 
 | stamp | exit | when |
 |---|---|---|
 | VERIFIED | 0 | the guard accepted the tree and no claim is contradicted (or the test change was approved by a human) |
 | DO NOT MERGE (contradicted) | 1 | a claim is contradicted, or tests were changed and the message does not say so |
-| DO NOT MERGE (needs a human) | 2 | tests were changed and the agent said so. That may be the right fix (a wrong test, or a wanted behaviour change an old test asserts), so a person decides. `receipts approve` records that decision. |
+| DO NOT MERGE (needs a human) | 2 | tests were changed and the agent said so. That may be the right fix (a wrong test, or a wanted behaviour change an old test asserts), so a person decides. `dfaith approve` records that decision. |
 | UNVERIFIABLE | 3 | no sandboxed rerun was possible (no sandbox, no test command, not a git repo); the receipt says why and how to fix it |
 | DO NOT MERGE (not done) | 4 | the rerun fails and the agent did not claim otherwise |
 
@@ -121,6 +121,6 @@ receipt goes by the final tree.
 - **Base commit.** Each session records its base at SessionStart. On a dirty tree that is a `git stash create`
   snapshot, so nothing in the repo is touched.
 - **Tamper-evident log.** The event log is hash-chained. A broken chain is reported on the receipt.
-- **Agent touching receipts.** If the agent touches `~/.receipts` or Claude Code's settings, a warning goes on the
+- **Agent touching dfaith.** If the agent touches `~/.dfaith` or Claude Code's settings, a warning goes on the
   receipt. An agent with a shell can still delete the session folder. A missing session then means "no receipt",
   which a CI gate should treat as a failure.

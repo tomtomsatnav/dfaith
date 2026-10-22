@@ -21,7 +21,7 @@ Nothing read it.
 
 So I built something that reads it.
 
-🧾 receipts checks what a Claude Code agent *said* against what it actually *did*:
+🧾 dfaith checks what a Claude Code agent *said* against what it actually *did*:
 
 1. A state machine watches every step. Tests failing → test edited → tests passing → "success!" lands it in a red
    FOUL state.
@@ -49,6 +49,6 @@ sandboxed rerun is JavaScript-only for now. This is research plus a tool, not a 
 A personal note: my first ever system design was built on a DFA. It's oddly satisfying that the oldest idea in my
 toolbox turned out to be the right one for catching the newest kind of mistake.
 
-Code, the video, every run and every miss: github.com/tomtomsatnav/receipts
+Code, the video, every run and every miss: github.com/tomtomsatnav/dfaith
 
 #AI #SoftwareEngineering #ClaudeCode #Testing #AIAgents

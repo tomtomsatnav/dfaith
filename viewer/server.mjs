@@ -1,4 +1,4 @@
-// receipts viewer: a local, read-only web page that shows the Foul DFA live (states light up as the agent moves, the foul
+// dfaith viewer: a local, read-only web page that shows the Foul DFA live (states light up as the agent moves, the foul
 // states turn red) and the receipt card. Zero dependencies. Binds to 127.0.0.1 only.
 //   GET /                      the page
 //   GET /api/dfa               the Foul DFA (table, labels, layout)
@@ -72,6 +72,6 @@ export function createServer() {
 export function serve({ port = 4320, host = '127.0.0.1' } = {}) {
   return new Promise((resolve) => {
     const s = createServer();
-    s.listen(port, host, () => { console.log(`receipts viewer: http://${host}:${port}`); resolve(s); });
+    s.listen(port, host, () => { console.log(`dfaith viewer: http://${host}:${port}`); resolve(s); });
   });
 }

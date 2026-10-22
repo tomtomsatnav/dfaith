@@ -1,4 +1,4 @@
-// The Foul DFA: the heart of receipts. A Moore machine over Claude Code hook events, written out as an explicit table.
+// The Foul DFA: the heart of dfaith. A Moore machine over Claude Code hook events, written out as an explicit table.
 //
 // Reading the table: a row is a state, a column is an input symbol, a cell is the next state. It is total (every state
 // handles every symbol; test/foul-table.test.mjs checks each of the 144 cells) and minimal (Hopcroft finds no two

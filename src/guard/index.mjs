@@ -40,18 +40,18 @@ export function sandboxStatus({ sandboxBin } = {}) {
 export async function runGuard({ repo, base, checks = null, profile = 'node-library', unsandboxed = false, timeoutMs = 300000, sandboxBin } = {}) {
   const t0 = Date.now();
   try {
-    if (!repo || !(await isGitRepo(repo))) return notRan(`not a git repository: ${repo}`, 'run receipts inside a git working tree');
+    if (!repo || !(await isGitRepo(repo))) return notRan(`not a git repository: ${repo}`, 'run dfaith inside a git working tree');
     if (!base) return notRan('no base commit given', 'record the HEAD sha at session start and pass it as base');
     if (!unsandboxed) {
       const sb = sandboxStatus({ sandboxBin });
       if (!sb.ok) return notRan(`OS sandbox unavailable: ${sb.reason}`, sb.hint);
     }
     const unsupported = !checks?.length ? await unsupportedRunner(repo, base) : null;
-    if (unsupported) return notRan(unsupported, 'receipts 0.1 reruns tests only for projects whose tests run with plain `node --test` and no installed dependencies (the sandboxed copy has no node_modules). Python, Go and Rust are not supported yet. The automaton and the claims still work.');
+    if (unsupported) return notRan(unsupported, 'dfaith 0.1 reruns tests only for projects whose tests run with plain `node --test` and no installed dependencies (the sandboxed copy has no node_modules). Python, Go and Rust are not supported yet. The automaton and the claims still work.');
     if (!checks || !checks.length) {
       let derived;
       try { derived = await defaultChecks(repo, base, profile); } catch (e) { return notRan(`cannot derive a test command: ${String(e?.message || e).slice(0, 200)}`, CANNOT_JUDGE.bad_base); }
-      if (!derived.length) return notRan('no test command derivable at the base commit (needs a package.json or node test files)', 'receipts 0.1 supports JavaScript projects tested with `node --test`; Python, Go and Rust are not supported yet');
+      if (!derived.length) return notRan('no test command derivable at the base commit (needs a package.json or node test files)', 'dfaith 0.1 supports JavaScript projects tested with `node --test`; Python, Go and Rust are not supported yet');
       checks = derived;
     }
     let timer;

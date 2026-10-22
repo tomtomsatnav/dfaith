@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/profiles.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // Profiles (docs/rules-design.md 4.2, 4.3): goal-layer rules objects chosen by the human. Pure data, no imports.
 const gl = (id, glob) => ({ id, glob }); const cm = (id, cmd, description) => ({ id, cmd, ...(description ? { description } : {}) });
 export const PROFILES = Object.freeze({

@@ -1,5 +1,5 @@
 {
-  "name": "receipts",
+  "name": "dfaith",
   "version": "0.1.0",
   "description": "Checks what a Claude Code agent claims against what it did: a DFA over hook events, a claim automaton over the final message, and a receipt backed by a sandboxed rerun of the original tests. Never steers the agent.",
   "author": { "name": "Tom Mitchell" },

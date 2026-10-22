@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/git.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // git helpers: execFile only (no shell), never touches the base branch, never pushes, never deletes branches it did
 // not create. Worktree layout: <repo>-aos-worktrees/<goal>/<task>, branches aos/<goal>/<task>.
 import fs from 'node:fs';

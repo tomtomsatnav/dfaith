@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/harness-guard.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // Engine side of the test-harness guard (see harness-preload.mjs / harness-reporter.mjs): prepares the guarded argv + env for an engine-run `node --test`
 // check, reads the markers and per-file counts afterwards, and judges them. Also: glob expansion for Node < 21 (which does not expand `test/*.test.mjs`
 // itself), and the static `harness_tamper` source rule.

@@ -1,5 +1,5 @@
 // The alphabet: turn one Claude Code hook event into Foul-DFA input symbols, each with the evidence that justifies it.
-// This is the part of receipts that is NOT a DFA. It is parsing: what a test run's output says, and what an edit did to a
+// This is the part of dfaith that is NOT a DFA. It is parsing: what a test run's output says, and what an edit did to a
 // test file. It works from the file contents on disk (a snapshot diff after every tool call), not from the tool's input, so
 // an edit made through Bash (sed -i, cat >, git checkout) is seen too.
 import path from 'node:path';
@@ -85,9 +85,9 @@ export function classifyHookEvent(p, ctx) {
   }
   if (ev !== 'PostToolUse' && ev !== 'PostToolUseFailure') return { symbols: [{ symbol: 'OTHER', evidence: { hook: ev, ...(tool ? { tool } : {}) } }], warnings };
 
-  // the agent touching receipts' own state or the hook config is reported, never silently accepted
+  // the agent touching dfaith's own state or the hook config is reported, never silently accepted
   const touched = [ti.file_path, ti.command, ti.notebook_path].filter(Boolean).join(' ');
-  if (/\.receipts\b|RECEIPTS_HOME|\.claude\/(settings|plugins)|plugins\/[^ ]*receipts/.test(touched)) warnings.push(`the agent touched receipts state or Claude Code settings: ${clip(touched, 160)}`);
+  if (/\.dfaith\b|DFAITH_HOME|\.claude\/(settings|plugins)|plugins\/[^ ]*dfaith/.test(touched)) warnings.push(`the agent touched dfaith state or Claude Code settings: ${clip(touched, 160)}`);
 
   const symbols = [];
   if (tool === 'Bash') {

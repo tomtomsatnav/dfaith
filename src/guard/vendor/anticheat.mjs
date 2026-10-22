@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/anticheat.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // Anti-cheating layer ("reward hacking" defences). A worker is rewarded when the engine's checks pass, so the engine must make sure a pass is honest.
 // Everything here is either PURE (parse / judge / analyse) or reads git through lib/git.mjs; the engine decides what to do with the findings.
 //   a) vacuous passes     parseTestSummary + judgeRun: node:test output with 0 tests, only skipped/todo tests, or fewer tests than the base commit's

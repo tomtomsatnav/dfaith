@@ -18,7 +18,7 @@ const sandbox = sandboxStatus();
 const skip = sandbox.ok ? false : `no OS sandbox: ${sandbox.reason}`;
 
 function seedRepo(files) {
-  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'receipts-guard-'));
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'dfaith-guard-'));
   const git = (...a) => execFileSync('git', a, { cwd: d, stdio: 'pipe' });
   for (const [p, c] of Object.entries(files)) { fs.mkdirSync(path.dirname(path.join(d, p)), { recursive: true }); fs.writeFileSync(path.join(d, p), c); }
   git('init', '-q', '-b', 'main'); git('add', '-A');
@@ -82,7 +82,7 @@ test('D: a missing sandbox binary means ran=false with a hint, never a throw', a
 });
 
 test('E: cannot-judge cases return ran=false', async () => {
-  const notGit = fs.mkdtempSync(path.join(os.tmpdir(), 'receipts-nogit-'));
+  const notGit = fs.mkdtempSync(path.join(os.tmpdir(), 'dfaith-nogit-'));
   const r = vatRepo();
   const empty = seedRepo({ 'README.md': '# nothing to test\n' });
   try {

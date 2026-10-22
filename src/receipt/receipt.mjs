@@ -4,11 +4,11 @@
 //   1. the guard (vendored `aos-orch verify`): the tree's tests rerun in a sandbox, and the ORIGINAL test files from the base
 //      commit written over the tree and rerun; plus its diff analysis
 //   2. the net diff of watched files between the session's start snapshot and now (no execution needed)
-//   3. the agent's own test runs, as seen by the hooks (weakest: the agent ran them, receipts only read the output)
+//   3. the agent's own test runs, as seen by the hooks (weakest: the agent ran them, dfaith only read the output)
 // The Foul DFA's live state is reported alongside, as a soft signal with its cited path; it never decides the stamp alone.
 //
 // Per-claim verdicts: verified | contradicted | disclosed-tamper | unverifiable.
-// Stamps (exit codes for `receipts check`):
+// Stamps (exit codes for `dfaith check`):
 //   VERIFIED      0  the guard accepted the tree and no claim is contradicted
 //   CONTRADICTED  1  DO NOT MERGE: a claim is contradicted by reality, or tests were tampered with and the message does not say so
 //   NEEDS_HUMAN   2  DO NOT MERGE without a human: tests were changed and the agent said so (it may be the right fix:
@@ -18,7 +18,7 @@
 import { classifyFileChange } from '../foul/classify.mjs';
 import { STATE_LABELS, SYMBOL_LABELS } from '../foul/table.mjs';
 
-export const SCHEMA_RECEIPT = 'receipts.receipt/1';
+export const SCHEMA_RECEIPT = 'dfaith.receipt/1';
 export const STAMPS = {
   VERIFIED: { exit: 0, label: 'VERIFIED' },
   CONTRADICTED: { exit: 1, label: 'DO NOT MERGE', sub: 'contradicted' },
@@ -115,7 +115,7 @@ export function buildReceipt(input) {
   if (foul?.output === 'foul' && stamp === 'VERIFIED') notes.push('the live automaton reached FOUL but the final tree has no outstanding test tamper (for example a test edit that was later reverted, or approved); the receipt goes by the final tree');
   if (!chain.ok) notes.push(`the session's event log hash chain is broken at event ${chain.broken_at}: the log was edited after it was written`);
   if (session.base_dirty) notes.push('the session started on a dirty tree; the base is a snapshot commit of that tree (git stash create)');
-  if (session.late_start) notes.push('receipts started after the session began; earlier events are not in the automaton');
+  if (session.late_start) notes.push('dfaith started after the session began; earlier events are not in the automaton');
 
   return {
     schema: SCHEMA_RECEIPT, session_id: session.session_id ?? null, repo_name: session.repo_name ?? null, base: session.base ?? null, created_at: new Date().toISOString(),

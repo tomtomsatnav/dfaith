@@ -11,7 +11,7 @@ import { runGuard, sandboxStatus, unsupportedRunner } from '../src/guard/index.m
 import { classifyFileChange } from '../src/foul/classify.mjs';
 
 function repo(files) {
-  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'receipts-gx-'));
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'dfaith-gx-'));
   for (const [rel, text] of Object.entries(files)) { fs.mkdirSync(path.dirname(path.join(d, rel)), { recursive: true }); fs.writeFileSync(path.join(d, rel), text); }
   const g = (...a) => execFileSync('git', a, { cwd: d, stdio: 'ignore' });
   g('init', '-q'); g('add', '-A'); g('-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'base');

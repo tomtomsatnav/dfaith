@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/protect.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // Protection of EXISTING tests and a heuristic for checks that need a server.
 // The guarantee is structural: at goal creation the test files of base_commit are listed; at verify the engine writes the ORIGINAL contents of those files over
 // the integration tree and runs them, so a task that deleted, weakened or rewrote an existing test cannot make the goal pass. The plan-approval WARNING (a

@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/glob.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // Tiny glob helpers (no dependencies). Paths are POSIX style and relative unless stated otherwise.
 const cache = new Map();
 /** Longest path (or glob) the matcher will look at; longer ones are "no match" for allow-style checks and "match" for deny-style ones (fail closed). */

@@ -1,6 +1,6 @@
 // Vendored from https://github.com/tomtomsatnav/aos-orchestrator
 // path: orchestrator/lib/checks.mjs @ 4ac965e6e5d82d58e915d379058744de8126f524
-// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for receipts are marked `// receipts:`.
+// MIT License, Copyright (c) 2026 Tom Mitchell (see NOTICE.md). Lines changed for dfaith are marked `// dfaith:`.
 // Run a task's (or the goal's) acceptance checks: argv only (no shell), cwd = worktree, minimal env, own timeout,
 // output capped. Commands must match the approved allowlist (the planner cannot add new check commands).
 // Checks execute worker-written code, so by default every check runs under sandbox-exec (macOS) or bubblewrap (Linux) (lib/sandbox.mjs): no network,

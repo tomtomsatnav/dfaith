@@ -1,4 +1,4 @@
-# receipts
+# dfaith
 
 **What a Claude Code agent said, checked against what it did.** A deterministic finite automaton watches the session's
 hook events, a second automaton pulls the claims out of the final message with their exact quotes, and at Stop a
@@ -12,11 +12,11 @@ finished product.
 > 10 of 10 times under an all-green report: the disclosure was in prose, and nothing read it.
 > ([source runs, 21 Oct 2026](https://github.com/tomtomsatnav/aos-orchestrator/blob/main/evals/results/2026-10-21.md))
 
-<p align="center"><img src="docs/demo.gif" alt="receipts: the automaton moves from tests failing to test edited to green to FOUL; the receipt quotes 'All tests pass' as CONTRADICTED and stamps DO NOT MERGE" width="900"><br>
+<p align="center"><img src="docs/demo.gif" alt="dfaith: the automaton moves from tests failing to test edited to green to FOUL; the receipt quotes 'All tests pass' as CONTRADICTED and stamps DO NOT MERGE" width="900"><br>
 <sub>A replay of a real recorded Haiku run (<code>evals/results/runs/2026-10-22T00-41-36-998Z-impossible-test-3</code>), time-compressed. <a href="docs/demo.mp4">MP4</a>.</sub></p>
 
 ```sh
-claude plugin marketplace add tomtomsatnav/receipts && claude plugin install receipts@receipts
+claude plugin marketplace add tomtomsatnav/dfaith && claude plugin install dfaith@dfaith
 ```
 
 No change to the agent or to the repo it works on. You need Node 18+ and git. The sandboxed rerun also needs
@@ -25,8 +25,8 @@ says UNVERIFIABLE and explains why; it never runs agent code unsandboxed.
 
 ## What you get
 
-- **A receipt at every Stop**, in `~/.receipts/sessions/<id>/receipt.json`. `/receipt` shows it in Claude Code;
-  `receipts check --latest` shows it in a terminal or CI.
+- **A receipt at every Stop**, in `~/.dfaith/sessions/<id>/receipt.json`. `/receipt` shows it in Claude Code;
+  `dfaith check --latest` shows it in a terminal or CI.
 
   ```
   STAMP    DO NOT MERGE (needs a human)  [exit 2]  tests were changed and the agent disclosed it; a person has to decide whether the change is right
@@ -47,8 +47,8 @@ says UNVERIFIABLE and explains why; it never runs agent code unsandboxed.
   - `DO NOT MERGE · not done` (4)
 
   Only the receipt can block. A disclosed test change means *needs a human*, not an automatic reject: it may be the
-  right fix. `receipts approve` records that a person signed it off.
-- **A live view of the automaton:** `receipts serve` opens http://127.0.0.1:4320. States light up as the agent moves,
+  right fix. `dfaith approve` records that a person signed it off.
+- **A live view of the automaton:** `dfaith serve` opens http://127.0.0.1:4320. States light up as the agent moves,
   and the foul states turn red. Next to it is the receipt card: the agent's sentence on the left, reality on the right,
   and the stamp.
 
@@ -62,7 +62,7 @@ says UNVERIFIABLE and explains why; it never runs agent code unsandboxed.
   and the tests check this.
 - **Every flag cites its path.** The claim side is one Aho-Corasick automaton flattened into a total table, plus a
   4-state token DFA, and every claim carries its exact span.
-- **Exportable:** `receipts dfa --format dot|mermaid|md`.
+- **Exportable:** `dfaith dfa --format dot|mermaid|md`.
 
 Details: [docs/how-it-works.md](docs/how-it-works.md).
 
@@ -112,7 +112,7 @@ Related tools, each checked against its own page on 22 Oct 2026:
 - **Hidden tests.** The guard reruns the tests that existed at the base commit. It cannot see tests nobody wrote, so
   an ordinary bug those tests miss is VERIFIED.
 - **Wanted behaviour changes.** A behaviour change that an old test asserts against cannot pass the original tests.
-  receipts says *needs a human* instead of rejecting it; a person still has to decide.
+  dfaith says *needs a human* instead of rejecting it; a person still has to decide.
 - **Languages.** The sandboxed rerun covers JS/TS projects that run `node --test` or `npm test`. Python, Go and Rust
   sessions get the automaton and the claims, but their receipt is UNVERIFIABLE. Supporting them needs runner support in
   the vendored guard: `defaultChecks` and `runnerFor`.
@@ -124,7 +124,7 @@ Related tools, each checked against its own page on 22 Oct 2026:
     tool call, so changes to those are seen.
   - **Short-circuits.** A test short-circuited by an added `return` is not classified as tamper. The guard's rerun of
     the original tests still catches it if the behaviour is wrong.
-- **The agent has a shell.** It can delete `~/.receipts`. The log is hash-chained and touching it is reported, but a
+- **The agent has a shell.** It can delete `~/.dfaith`. The log is hash-chained and touching it is reported, but a
   missing receipt has to be treated as a failure by whatever gates on it.
 - **Cost.** Measured with `node scripts/bench-hook.mjs` (Linux, Node 22). The hook takes a median of about 50 ms per
   edit or Bash call and about 100 ms at Stop. The receipt runs in the background after Stop; the sandboxed rerun took
@@ -133,16 +133,16 @@ Related tools, each checked against its own page on 22 Oct 2026:
 ## Use
 
 ```sh
-receipts check --latest            # the receipt for the latest session; exit code = stamp
-receipts approve --latest          # a human signs off a disclosed test change
-receipts serve                     # live automaton + receipt card on 127.0.0.1:4320
-receipts dfa --format mermaid      # export the Foul DFA
-receipts claims message.txt        # run the claim automaton on any text
+dfaith check --latest            # the receipt for the latest session; exit code = stamp
+dfaith approve --latest          # a human signs off a disclosed test change
+dfaith serve                     # live automaton + receipt card on 127.0.0.1:4320
+dfaith dfa --format mermaid      # export the Foul DFA
+dfaith claims message.txt        # run the claim automaton on any text
 npm test                           # DFA, claims, classifier, receipt, vendored guard, golden replays of real runs
 node evals/run.mjs --task impossible-test --k 10   # real runs (needs the claude CLI)
 ```
 
 Built on `aos-orch verify` from [aos-orchestrator](https://github.com/tomtomsatnav/aos-orchestrator), vendored under
 MIT (see `src/guard/vendor/NOTICE.md`). Works alongside the [AOS dashboard](https://github.com/tomtomsatnav/agent-orchestration-standard):
-set `RECEIPTS_AOS_ORCH_DIR=~/.aos/orch` and each receipt is also written as an `aos.verdict/1` record, which the
+set `DFAITH_AOS_ORCH_DIR=~/.aos/orch` and each receipt is also written as an `aos.verdict/1` record, which the
 dashboard's Guard view shows. [MIT License](LICENSE).

@@ -96,8 +96,8 @@ test('hook events: a source edit, a non-test command, and Stop with and without 
   assert.equal(classifyHookEvent({ hook_event_name: 'Stop', last_assistant_message: 'Once deployed, all tests should pass.' }, ctx).symbols[0].symbol, 'STOP', 'hedged claims are not claims');
 });
 
-test('hook events: touching receipts state is reported', () => {
+test('hook events: touching dfaith state is reported', () => {
   const { ctx } = ctxWith({});
-  const r = classifyHookEvent({ hook_event_name: 'PostToolUse', tool_name: 'Bash', cwd: '/repo', tool_input: { command: 'rm -rf ~/.receipts/sessions' }, tool_response: { stdout: '' } }, ctx);
+  const r = classifyHookEvent({ hook_event_name: 'PostToolUse', tool_name: 'Bash', cwd: '/repo', tool_input: { command: 'rm -rf ~/.dfaith/sessions' }, tool_response: { stdout: '' } }, ctx);
   assert.equal(r.warnings.length, 1);
 });

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Real runs: a fresh seed repo per trial, a real `claude -p --model haiku` session with receipts loaded as a plugin, then
+// Real runs: a fresh seed repo per trial, a real `claude -p --model haiku` session with dfaith loaded as a plugin, then
 // the receipt the plugin wrote at Stop. Nothing here is simulated. Usage:
 //   node evals/run.mjs --task impossible-test --k 10 [--model haiku] [--out evals/results]
 // Each trial's session folder (events.jsonl, message.json, receipt.json, meta.json) is copied to evals/results/runs/ with
@@ -33,16 +33,16 @@ function claude(cwd, env, sessionId) {
 }
 
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'receipts-eval-'));
+const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dfaith-eval-'));
 const home = path.join(tmpRoot, 'home');
 fs.mkdirSync(path.join(outDir, 'runs'), { recursive: true });
 const results = [];
 for (let t = 1; t <= k; t++) {
   const repo = path.join(tmpRoot, `${taskId}-${t}`); fs.mkdirSync(repo);
   for (const [rel, text] of Object.entries(task.files)) { fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true }); fs.writeFileSync(path.join(repo, rel), text); }
-  git(repo, ['init', '-q']); git(repo, ['add', '-A']); git(repo, ['-c', 'user.email=eval@receipts', '-c', 'user.name=eval', 'commit', '-qm', 'seed']);
+  git(repo, ['init', '-q']); git(repo, ['add', '-A']); git(repo, ['-c', 'user.email=eval@dfaith', '-c', 'user.name=eval', 'commit', '-qm', 'seed']);
   const sessionId = crypto.randomUUID();
-  const env = { ...process.env, RECEIPTS_HOME: home }; delete env.CLAUDE_CODE_SESSION_ID;
+  const env = { ...process.env, DFAITH_HOME: home }; delete env.CLAUDE_CODE_SESSION_ID;
   const r = await claude(repo, env, sessionId);
   // the receipt is written by a detached process after Stop: wait for it
   const sdir = path.join(home, 'sessions', sessionId); let receipt = null;
@@ -50,7 +50,7 @@ for (let t = 1; t <= k; t++) {
   const grade = task.grade(repo);
   let approved = null;
   if (args.includes('--approve') && receipt) { // a human signs off the test change, then the receipt is rebuilt
-    try { execFileSync(process.execPath, [path.join(root, 'bin', 'receipts.mjs'), 'approve', '--session', sessionId, '--by', 'eval-harness (standing in for a human)'], { env, stdio: 'ignore' }); } catch { /* exit code = stamp */ }
+    try { execFileSync(process.execPath, [path.join(root, 'bin', 'dfaith.mjs'), 'approve', '--session', sessionId, '--by', 'eval-harness (standing in for a human)'], { env, stdio: 'ignore' }); } catch { /* exit code = stamp */ }
     approved = JSON.parse(fs.readFileSync(path.join(sdir, 'receipt.json'), 'utf8'));
   }
   const row = { task: taskId, trial: t, model, session_id: sessionId, claude_exit: r.code, wall_s: r.wall_s, cost_usd: r.json?.total_cost_usd ?? null, num_turns: r.json?.num_turns ?? null,
@@ -70,5 +70,5 @@ for (let t = 1; t <= k; t++) {
   }
 }
 const file = path.join(outDir, `${stamp}-${taskId}-${model}.json`);
-fs.writeFileSync(file, JSON.stringify({ generated_at: new Date().toISOString(), receipts_commit: git(root, ['rev-parse', 'HEAD']), receipts_dirty: git(root, ['status', '--porcelain']).length > 0, claude_version: execFileSync('claude', ['--version'], { encoding: 'utf8' }).trim(), task: taskId, model, k, prompt: task.prompt, results }, null, 2));
+fs.writeFileSync(file, JSON.stringify({ generated_at: new Date().toISOString(), dfaith_commit: git(root, ['rev-parse', 'HEAD']), dfaith_dirty: git(root, ['status', '--porcelain']).length > 0, claude_version: execFileSync('claude', ['--version'], { encoding: 'utf8' }).trim(), task: taskId, model, k, prompt: task.prompt, results }, null, 2));
 console.log(`wrote ${path.relative(root, file)}`);

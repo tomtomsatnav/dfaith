@@ -7,7 +7,7 @@ The files in this directory are copied from **aos-orchestrator**
 
 | File | Upstream path | Changes |
 |---|---|---|
-| guard.mjs | orchestrator/lib/guard.mjs | 1 line: imports `DEFAULT_RULES` from `./default-rules.mjs` instead of `./rules.mjs` (marked `// receipts:`) |
+| guard.mjs | orchestrator/lib/guard.mjs | 1 line: imports `DEFAULT_RULES` from `./default-rules.mjs` instead of `./rules.mjs` (marked `// dfaith:`) |
 | git.mjs | orchestrator/lib/git.mjs | none |
 | checks.mjs | orchestrator/lib/checks.mjs | none |
 | sandbox.mjs | orchestrator/lib/sandbox.mjs | none |
