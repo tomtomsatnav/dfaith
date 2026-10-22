@@ -21,17 +21,17 @@ const suffix = opt('format', '45') === '45' ? '-4x5' : '';
 const dry = args.includes('--dry-run');
 
 // What is said. "dfaith" is spelled out phonetically for the speech engine.
-export const LINES = {
-  cap0: 'The AI said: all tests pass. That was not true.',
-  cap1: 'The task: make the tests pass. But the test is wrong.',
-  cap2: 'The tests fail.',
-  cap3: 'So it edits the test, not the code.',
-  cap4: 'Now they pass.',
-  cap5: 'Its report: all tests pass.',
-  cap6: 'Dee-faith reruns the original tests. They fail.',
-  cap7: 'Do not merge. A human checks that edit.',
-  grid: 'Ten runs. Ten rewrites. Every one stamped.',
-  install: 'Dee-faith. One line to install.',
+export const LINES = { // the walkthrough script, docs/voiceover-script.md
+  cap0: 'This is Dee-faith, catching a real Claude run.',
+  cap1: 'On the left, a state machine watches the agent.',
+  cap2: 'It runs the tests. They fail.',
+  cap3: 'Now watch. It edits the test instead.',
+  cap4: 'Green. Only because the test changed.',
+  cap5: 'Its report: all tests pass. Highlighted, word for word.',
+  cap6: 'So Dee-faith reruns the original tests. They fail.',
+  cap7: 'Verdict: do not merge. A human checks the edit.',
+  grid: 'Ten real runs. Ten stamps.',
+  install: 'One line to install.',
 };
 
 // --clips DIR: use clips already made (DIR/<line id>.wav or .mp3), e.g. from the ElevenLabs app or connector, instead of the API.
@@ -82,6 +82,6 @@ for (const [i, p] of plan.entries()) {
 const inputs = parts.flatMap((p) => ['-i', p.f]);
 const chains = parts.map((p, i) => `[${i + 1}:a]${p.tempo > 1 ? `atempo=${p.tempo.toFixed(3)},` : ''}adelay=${Math.round(p.at * 1000)}|${Math.round(p.at * 1000)}[a${i}]`);
 const mix = `${parts.map((_, i) => `[a${i}]`).join('')}amix=inputs=${parts.length}:normalize=0,apad,atrim=0:${videoDur.toFixed(2)},loudnorm=I=-16:TP=-1.5[aout]`;
-const outFile = path.join(root, 'docs', `demo${suffix2}-voiced.mp4`);
+const outFile = path.join(root, 'docs', `demo${suffix2}-voiced.mp4`); // docs/demo-4x5-voiced.mp4 for --format 45
 execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, ...inputs, '-filter_complex', [...chains, mix].join(';'), '-map', '0:v', '-map', '[aout]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', outFile]);
 console.log(`wrote ${path.relative(root, outFile)}`);
