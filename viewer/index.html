@@ -297,6 +297,9 @@ async function showGrid(batch, { pace = 0 } = {}) {
 // ---- replay of a recorded real run, time-compressed for a ~29 s video
 async function replay(name, video) {
   const run = await getJSON(`/api/run/${encodeURIComponent(name)}`);
+  // per-beat durations in ms; the default is the silent cut's reading budget, a voiced cut passes ?beats={"cap0":4700,...}
+  let BEATS = {}; try { BEATS = JSON.parse(Q.get('beats') || '{}'); } catch { /* defaults */ }
+  const B = (k, d) => (video ? Math.max(d, Number(BEATS[k]) || 0) : d);
   const cap = video && Q.get('captions') !== '0' ? caption : () => {};
   if (video && Q.get('captions') !== '0') document.body.classList.add('capt');
   $('mode').textContent = 'replay of a real recorded run · time-compressed';
@@ -307,24 +310,24 @@ async function replay(name, video) {
   if (video && Q.get('coldopen') !== '0') { // 0–2.4 s: cold open on the end result
     for (const e of evs) step(e);
     $('msg').innerHTML = markedMessage(msg, r.claims); await showReceipt(r);
-    cap('', `The AI said <q>${esc(passQuote)}</q>. Untrue.`); await sleep(3500); clearReceipt();
+    cap('', `The AI said <q>${esc(passQuote)}</q>. Untrue.`); await sleep(B('cap0', 3500)); clearReceipt();
   }
-  resetDFA(); cap('1', 'Task: make the tests pass. <b>The test is wrong.</b>'); await sleep(video ? 4000 : 300);
+  resetDFA(); cap('1', 'Task: make the tests pass. <b>The test is wrong.</b>'); await sleep(video ? B('cap1', 4000) : 300);
   const firstT = evs.findIndex((e) => TAMPER.has(e.symbol)); const stopI = evs.findIndex((e) => e.symbol === 'CLAIM_PASS' || e.symbol === 'STOP');
   const before = evs.slice(0, firstT < 0 ? stopI : firstT); const after = firstT < 0 ? [] : evs.slice(firstT + 1, stopI);
   cap('2', 'The tests <b>fail</b>.');
-  for (const e of before) { step(e); await sleep(video ? 2700 / Math.max(1, before.length) : 250); }
-  if (firstT >= 0) { cap('3', 'So it <b>edits the test</b>, not the code.'); step(evs[firstT]); await sleep(video ? 3700 : 500); }
+  for (const e of before) { step(e); await sleep(video ? B('cap2', 2700) / Math.max(1, before.length) : 250); }
+  if (firstT >= 0) { cap('3', 'So it <b>edits the test</b>, not the code.'); step(evs[firstT]); await sleep(video ? B('cap3', 3700) : 500); }
   cap('4', 'Now they <b>pass</b>.');
-  for (const e of after) { step(e); await sleep(video ? 2700 / Math.max(1, after.length) : 300); }
+  for (const e of after) { step(e); await sleep(video ? B('cap4', 2700) / Math.max(1, after.length) : 300); }
   cap('5', `Its report: <q>${esc(passQuote)}</q>`);
   await typeMessage(msg, r.claims, video ? 3000 : 800);
-  if (stopI >= 0) step(evs[stopI]); await sleep(video ? 900 : 200);
+  if (stopI >= 0) step(evs[stopI]); await sleep(video ? Math.max(900, B('cap5', 3900) - 3000) : 200);
   cap('6', 'dfaith reruns the ORIGINAL tests: they <b>fail</b>.');
-  await showReceipt(r, { pace: video ? 1400 : 150 });
+  await showReceipt(r, { pace: video ? B('cap6', 3600) / 2.6 : 150 });
   cap('7', r.stamp === 'NEEDS_HUMAN' ? '<b>DO NOT MERGE</b>: a human must check the edit.' : `Verdict: <b>${esc(r.stamp_label)}</b>`);
-  await sleep(video ? 4000 : 300);
-  if (video) { cap('', ''); await showGrid(name.replace(/-\d+$/, ''), { pace: 90 }); await sleep(1300); $('gridov').classList.remove('on'); $('installov').classList.add('on'); }
+  await sleep(video ? B('cap7', 4000) : 300);
+  if (video) { cap('', ''); await showGrid(name.replace(/-\d+$/, ''), { pace: 90 }); await sleep(B('grid', 1300)); $('gridov').classList.remove('on'); $('installov').classList.add('on'); }
   document.title = 'dfaith · done';
 }
 

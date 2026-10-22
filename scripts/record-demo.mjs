@@ -15,7 +15,9 @@ const args = process.argv.slice(2); const opt = (n, d) => { const i = args.index
 const run = opt('run'); if (!run) throw new Error('--run NAME required');
 const out = path.resolve(opt('out', path.join(root, 'docs')));
 const v45 = opt('format', '169') === '45'; // 45 = 4:5 vertical feed cut (1080x1350), 169 = 16:9 (1280x720)
-const W = v45 ? 1080 : 1280; const H = v45 ? 1350 : 720; const scale = 1; const suffix = v45 ? '-4x5' : ''; // the 4:5 page lays out at 864x1080 CSS px and is zoomed 1.25x (video recording ignores deviceScaleFactor) const suffix = v45 ? '-4x5' : '';
+const W = v45 ? 1080 : 1280; const H = v45 ? 1350 : 720; const scale = 1; const suffix = (v45 ? '-4x5' : '') + (opt('suffix', '') ? `-${opt('suffix')}` : '');
+// the 4:5 page lays out at 864x1080 CSS px and is zoomed 1.25x (video recording ignores deviceScaleFactor)
+const beats = opt('beats') ? fs.readFileSync(opt('beats'), 'utf8') : ''; // per-beat durations (ms) for a voiced cut
 const pw = await import(process.env.PLAYWRIGHT_MODULE || 'playwright').catch(() => import('/opt/node-tools/node_modules/playwright/index.mjs'));
 
 const server = createServer(); await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -33,9 +35,9 @@ await page.addInitScript(() => {
     .observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
 });
 const t0 = Date.now();
-await page.goto(`http://127.0.0.1:${port}/?replay=${encodeURIComponent(run)}&video=1&theme=dark${v45 ? '&v45=1' : ''}`);
+await page.goto(`http://127.0.0.1:${port}/?replay=${encodeURIComponent(run)}&video=1&theme=dark${v45 ? '&v45=1' : ''}${beats ? `&beats=${encodeURIComponent(beats)}` : ''}`);
 await page.waitForFunction(() => document.title === 'dfaith · done', null, { timeout: 90000 });
-await page.waitForTimeout(1800); // hold the install line
+await page.waitForTimeout(beats ? Math.max(1800, Number(JSON.parse(beats).install) || 0) : 1800); // hold the install line
 const cues = await page.evaluate(() => window.__cues); const endT = await page.evaluate(() => performance.now() / 1000);
 await ctx.close(); await browser.close(); server.close();
 const webm = fs.readdirSync(tmp).find((f) => f.endsWith('.webm'));

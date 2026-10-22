@@ -34,8 +34,21 @@ export const LINES = {
   install: 'Dee-faith. One line to install.',
 };
 
-const cues = JSON.parse(fs.readFileSync(path.join(root, 'docs', `demo${suffix}.cues.json`), 'utf8'));
-const video = path.join(root, 'docs', `demo${suffix}.mp4`);
+// --clips DIR: use clips already made (DIR/<line id>.wav or .mp3), e.g. from the ElevenLabs app or connector, instead of the API.
+// --plan FILE: write the per-beat durations (spoken length + 0.4 s, in ms) the voiced recording needs, then stop:
+//   node scripts/voiceover.mjs --clips DIR --plan docs/voice-beats.json
+//   node scripts/record-demo.mjs --run <run> --format 45 --beats docs/voice-beats.json --suffix voice
+//   node scripts/voiceover.mjs --clips DIR --format 45 --suffix voice
+const clipsDir = opt('clips');
+const clipOf = (id) => ['.trim.wav', '.wav', '.mp3'].map((e) => path.join(clipsDir || '', `${id}${e}`)).find((f) => clipsDir && fs.existsSync(f));
+if (opt('plan')) {
+  const durOf = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f], { encoding: 'utf8' }).trim());
+  const plan = Object.fromEntries(Object.keys(LINES).filter(clipOf).map((id) => [id, Math.round((durOf(clipOf(id)) + 0.4) * 1000)]));
+  fs.writeFileSync(opt('plan'), JSON.stringify(plan, null, 2)); console.log(plan); process.exit(0);
+}
+const suffix2 = suffix + (opt('suffix') ? `-${opt('suffix')}` : '');
+const cues = JSON.parse(fs.readFileSync(path.join(root, 'docs', `demo${suffix2}.cues.json`), 'utf8'));
+const video = path.join(root, 'docs', `demo${suffix2}.mp4`);
 const dur = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f], { encoding: 'utf8' }).trim());
 const videoDur = dur(video);
 const plan = cues.filter((c) => LINES[c.id]).map((c) => ({ ...c, say: LINES[c.id], window: c.end - c.start }));
@@ -45,10 +58,16 @@ for (const p of plan) console.log(`${p.start.toFixed(1).padStart(5)} s  [${p.win
 if (dry) process.exit(0);
 
 const key = process.env.ELEVENLABS_API_KEY; const voice = process.env.ELEVENLABS_VOICE_ID;
-if (!key || !voice) { console.error('set ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID (see docs/voiceover.md)'); process.exit(2); }
+if (!clipsDir && (!key || !voice)) { console.error('set ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID, or pass --clips DIR (see docs/voiceover.md)'); process.exit(2); }
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dfaith-voice-'));
 const parts = [];
 for (const [i, p] of plan.entries()) {
+  if (clipsDir) {
+    const f = clipOf(p.id); if (!f) { console.error(`no clip for ${p.id} in ${clipsDir}`); process.exit(1); }
+    const d = dur(f); const room = p.window - 0.15; const tempo = d > room ? d / room : 1;
+    if (tempo > 1.12) { console.error(`"${p.say}" takes ${d.toFixed(1)} s but its cue is ${p.window.toFixed(1)} s: record with --beats`); process.exit(1); }
+    parts.push({ f, at: p.start + 0.1, tempo }); console.log(`clip ${p.id}: ${d.toFixed(1)} s in a ${p.window.toFixed(1)} s cue`); continue;
+  }
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_44100_128`, {
     method: 'POST', headers: { 'xi-api-key': key, 'content-type': 'application/json', accept: 'audio/mpeg' },
     body: JSON.stringify({ text: p.say, model_id: process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2', voice_settings: { stability: 0.5, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true } }),
@@ -63,6 +82,6 @@ for (const [i, p] of plan.entries()) {
 const inputs = parts.flatMap((p) => ['-i', p.f]);
 const chains = parts.map((p, i) => `[${i + 1}:a]${p.tempo > 1 ? `atempo=${p.tempo.toFixed(3)},` : ''}adelay=${Math.round(p.at * 1000)}|${Math.round(p.at * 1000)}[a${i}]`);
 const mix = `${parts.map((_, i) => `[a${i}]`).join('')}amix=inputs=${parts.length}:normalize=0,apad,atrim=0:${videoDur.toFixed(2)},loudnorm=I=-16:TP=-1.5[aout]`;
-const outFile = path.join(root, 'docs', `demo${suffix}-voice.mp4`);
+const outFile = path.join(root, 'docs', `demo${suffix2}-voiced.mp4`);
 execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, ...inputs, '-filter_complex', [...chains, mix].join(';'), '-map', '0:v', '-map', '[aout]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', outFile]);
 console.log(`wrote ${path.relative(root, outFile)}`);
