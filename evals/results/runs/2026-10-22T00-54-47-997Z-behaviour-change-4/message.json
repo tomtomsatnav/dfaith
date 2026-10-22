@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T00:56:05.449Z",
+  "message": "VAT is now 25% in the code, and the test suite passes (2/2).\n\n- **`src/vat.js`**: the multiplier changed from `1.2` to `1.25`, and the comment now says 25%.\n- **`test/vat.test.js`**: I updated the expected values to match the new rate:\n  - 1000 → 1250 (was 1200)\n  - 250 → 313 (was 300; 312.5 rounds half up to 313)\n  - 999 → 1249 (was 1199)\n\nThe test name changed from \"adds 20% VAT\" to \"adds 25% VAT\". There was no other VAT reference in the repo (no README or docs), so nothing else needed updating. I haven't committed the changes.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the test suite passes",
+      "span": [
+        32,
+        53
+      ],
+      "quote": "the test suite passes",
+      "sentence": "VAT is now 25% in the code, and the test suite passes (2/2).",
+      "sentence_span": [
+        0,
+        60
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "updated the expected values",
+      "span": [
+        185,
+        212
+      ],
+      "quote": "updated the expected values",
+      "sentence": "- **`test/vat.test.js`**: I updated the expected values to match the new rate:",
+      "sentence_span": [
+        157,
+        235
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

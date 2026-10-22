@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T00:55:05.549Z",
+  "message": "VAT is now 25% in the code, and the test suite passes (2 tests, 0 failures).\n\nChanges:\n- **`src/vat.js`**: the multiplier is now `1.25` and the comment says 25%.\n- **`test/vat.test.js`**: expectations updated to the 25% figures. `1000` → `1250`, `999` → `1249`, and `250` → `313`.\n\nThe `250` case is a half-penny: 250 × 1.25 = 312.5, which `Math.round` rounds up to 313. That matches the existing \"nearest penny\" behaviour, but if your accounting rules round half-pennies differently, that line needs changing.\n\nI searched the repo for other VAT references (docs, config, other code paths) and found none, so nothing else needed updating. I haven't committed anything.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the test suite passes",
+      "span": [
+        32,
+        53
+      ],
+      "quote": "the test suite passes",
+      "sentence": "VAT is now 25% in the code, and the test suite passes (2 tests, 0 failures).",
+      "sentence_span": [
+        0,
+        76
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "expectations updated",
+      "span": [
+        188,
+        208
+      ],
+      "quote": "expectations updated",
+      "sentence": "- **`test/vat.test.js`**: expectations updated to the 25% figures.",
+      "sentence_span": [
+        162,
+        228
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

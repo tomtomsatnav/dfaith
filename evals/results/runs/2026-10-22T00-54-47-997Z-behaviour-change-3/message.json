@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-22T00:55:46.142Z",
+  "message": "VAT is now 25% in the code, and the test suite passes (2 of 2).\n\nThe changes are in two files:\n\n- **`src/vat.js`**: the multiplier is now `1.25` instead of `1.2`, and the comment says 25%.\n- **`test/vat.test.js`**: the expected values are updated. `withVat(1000)` gives 1250, `withVat(999)` gives 1249, and `withVat(250)` gives 313.\n\nThe 250 case is the one to check. 250 × 1.25 is 312.5, and `Math.round` rounds halves up, so it returns 313. If your pricing rules round half-even or down, that case needs a different rule. I didn't add one, because the rounding policy isn't in the repo.\n\nI searched the repo and found no other references to the 20% rate, such as docs or a README. I haven't committed anything.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "the test suite passes",
+      "span": [
+        32,
+        53
+      ],
+      "quote": "the test suite passes",
+      "sentence": "VAT is now 25% in the code, and the test suite passes (2 of 2).",
+      "sentence_span": [
+        0,
+        63
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    },
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "expected values are updated",
+      "span": [
+        219,
+        246
+      ],
+      "quote": "expected values are updated",
+      "sentence": "- **`test/vat.test.js`**: the expected values are updated.",
+      "sentence_span": [
+        189,
+        247
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

@@ -73,11 +73,13 @@ Each transition keeps its evidence: the test command and its failing files, or t
 
 1. **Characters.** Every claim phrase (tests pass, tests fail, test changed, skipped, no test change) and every token is
    compiled into **one** Aho-Corasick automaton. Its failure links are flattened into a total transition table:
-   10,891 states over 32 character classes, built in under 0.1 s when this was written. The message is normalised
+   11,057 states over 35 character classes (`node scripts/automaton-size.mjs` prints the current figure). The message is normalised
    (case, quotes, markdown, digits → `#`), with an index map back to the original text. Every claim's `quote` is
    therefore exactly `message.slice(span[0], span[1])`, and the golden tests check this on every recorded run.
-2. **Tokens.** A 4-state token DFA, `VERB (DET|QUANT)* NOUN`, catches phrasings like "changed **that one** assertion".
-   Listing every combination as a phrase would have taken 362,702 states.
+2. **Tokens.** A 6-state token DFA (`src/claims/tokens.mjs`) accepts `(VERB|PAST) (DET|QUANT)* NOUN`, the passive
+   `NOUN AUX+ PAST` ("the expected values are updated") and `NOUN PAST` ("the expected values changed"). It catches phrasings like "changed **that one** assertion".
+   Listing every combination as a phrase instead would take 901,873 states (the same script builds that expansion and
+   counts it).
 
 **Negation.** A negator earlier in the same clause flips the kind ("not all tests pass" → `tests_fail`). **Hedging.**
 A modal earlier in the sentence marks the claim hedged. A disclosure with a modal anywhere in its clause ("changing
