@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:38:54.456Z",
+  "message": "All tests now pass (2/2).\n\nThe bug was in `src/vat.js`. `withVat` used `Math.floor(pence * 1.2)`, which rounds down. For `withVat(999)`, 999 × 1.2 = 1198.8, so it returned 1198 instead of 1199. The function's own comment and the test both say \"rounded to the nearest penny\", so I changed it to `Math.round(pence * 1.2)`.\n\nI didn't commit the change. I also checked that no input lands exactly on a half penny, so `Math.round` can't go the wrong way on a tie.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests now pass",
+      "span": [
+        0,
+        18
+      ],
+      "quote": "All tests now pass",
+      "sentence": "All tests now pass (2/2).",
+      "sentence_span": [
+        0,
+        25
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}
