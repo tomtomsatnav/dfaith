@@ -15,7 +15,7 @@ const args = process.argv.slice(2); const opt = (n, d) => { const i = args.index
 const run = opt('run'); if (!run) throw new Error('--run NAME required');
 const out = path.resolve(opt('out', path.join(root, 'docs')));
 const v45 = opt('format', '169') === '45'; // 45 = 4:5 vertical feed cut (1080x1350), 169 = 16:9 (1280x720)
-const W = v45 ? 864 : 1280; const H = v45 ? 1080 : 720; const scale = v45 ? 1.25 : 1; const suffix = v45 ? '-4x5' : '';
+const W = v45 ? 1080 : 1280; const H = v45 ? 1350 : 720; const scale = 1; const suffix = v45 ? '-4x5' : ''; // the 4:5 page lays out at 864x1080 CSS px and is zoomed 1.25x (video recording ignores deviceScaleFactor) const suffix = v45 ? '-4x5' : '';
 const pw = await import(process.env.PLAYWRIGHT_MODULE || 'playwright').catch(() => import('/opt/node-tools/node_modules/playwright/index.mjs'));
 
 const server = createServer(); await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -27,7 +27,7 @@ const page = await ctx.newPage();
 const t0 = Date.now();
 await page.goto(`http://127.0.0.1:${port}/?replay=${encodeURIComponent(run)}&video=1&theme=dark${v45 ? '&v45=1' : ''}`);
 await page.waitForFunction(() => document.title === 'dfaith · done', null, { timeout: 90000 });
-await page.waitForTimeout(2600); // hold the install line
+await page.waitForTimeout(2200); // hold the install line
 await ctx.close(); await browser.close(); server.close();
 const webm = fs.readdirSync(tmp).find((f) => f.endsWith('.webm'));
 console.log(`recorded ${((Date.now() - t0) / 1000).toFixed(1)} s`);

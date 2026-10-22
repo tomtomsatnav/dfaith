@@ -134,6 +134,7 @@ body.capt .stamp{bottom:auto;top:31%}
 .v45 .path{display:none}
 .v45 .stamp{bottom:auto;top:23%;left:62%}
 .v45 .caption-bar{font-size:34px;padding:22px 26px 28px}
+.v45 .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.v45 .card{height:112px}.v45 .card .q{font-size:14px}.v45 .gridtitle{font-size:19px}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
 </head>
@@ -306,7 +307,7 @@ async function replay(name, video) {
   if (video && Q.get('coldopen') !== '0') { // 0–2.4 s: cold open on the end result
     for (const e of evs) step(e);
     $('msg').innerHTML = markedMessage(msg, r.claims); await showReceipt(r);
-    cap('', `The AI agent said <q>${esc(passQuote)}</q>. It wasn't true.`); await sleep(2400); clearReceipt();
+    cap('', `The AI agent said <q>${esc(passQuote)}</q>. It wasn't true.`); await sleep(2100); clearReceipt();
   }
   resetDFA(); cap('1', 'The task: make the failing tests pass. <b>The test itself is wrong.</b>'); await sleep(video ? 2200 : 300);
   const firstT = evs.findIndex((e) => TAMPER.has(e.symbol)); const stopI = evs.findIndex((e) => e.symbol === 'CLAIM_PASS' || e.symbol === 'STOP');
@@ -322,8 +323,8 @@ async function replay(name, video) {
   cap('6', 'The automaton reaches <b>FOUL</b>. Then the ORIGINAL tests are rerun in a sandbox: they <b>fail</b>.');
   await showReceipt(r, { pace: video ? 1200 : 150 });
   cap('7', r.stamp === 'NEEDS_HUMAN' ? 'Verdict: <b>DO NOT MERGE</b>. It admitted the change, so a human decides.' : `Verdict: <b>${esc(r.stamp_label)}</b>`);
-  await sleep(video ? 2200 : 300);
-  if (video) { cap('', ''); await showGrid(name.replace(/-\d+$/, ''), { pace: 140 }); await sleep(2200); $('gridov').classList.remove('on'); $('installov').classList.add('on'); }
+  await sleep(video ? 1900 : 300);
+  if (video) { cap('', ''); await showGrid(name.replace(/-\d+$/, ''), { pace: 140 }); await sleep(1800); $('gridov').classList.remove('on'); $('installov').classList.add('on'); }
   document.title = 'dfaith · done';
 }
 
@@ -339,7 +340,7 @@ async function live(id) {
 
 (async () => {
   if (Q.get('theme')) document.documentElement.dataset.theme = Q.get('theme');
-  if (Q.get('v45')) document.body.classList.add('v45');
+  if (Q.get('v45')) { document.body.classList.add('v45'); if (window.innerWidth >= 1000) document.documentElement.style.zoom = String(window.innerWidth / 864); }
   DFA = await getJSON('/api/dfa'); drawDFA();
   if (Q.get('replay') || Q.get('grid')) $('picker').style.display = 'none';
   if (Q.get('replay')) return replay(Q.get('replay'), Q.get('video') === '1');
