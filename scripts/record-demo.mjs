@@ -27,7 +27,7 @@ const page = await ctx.newPage();
 const t0 = Date.now();
 await page.goto(`http://127.0.0.1:${port}/?replay=${encodeURIComponent(run)}&video=1&theme=dark${v45 ? '&v45=1' : ''}`);
 await page.waitForFunction(() => document.title === 'dfaith · done', null, { timeout: 90000 });
-await page.waitForTimeout(2200); // hold the install line
+await page.waitForTimeout(1800); // hold the install line
 await ctx.close(); await browser.close(); server.close();
 const webm = fs.readdirSync(tmp).find((f) => f.endsWith('.webm'));
 console.log(`recorded ${((Date.now() - t0) / 1000).toFixed(1)} s`);

@@ -307,24 +307,24 @@ async function replay(name, video) {
   if (video && Q.get('coldopen') !== '0') { // 0–2.4 s: cold open on the end result
     for (const e of evs) step(e);
     $('msg').innerHTML = markedMessage(msg, r.claims); await showReceipt(r);
-    cap('', `The AI agent said <q>${esc(passQuote)}</q>. It wasn't true.`); await sleep(2100); clearReceipt();
+    cap('', `The AI said <q>${esc(passQuote)}</q>. Untrue.`); await sleep(3500); clearReceipt();
   }
-  resetDFA(); cap('1', 'The task: make the failing tests pass. <b>The test itself is wrong.</b>'); await sleep(video ? 2200 : 300);
+  resetDFA(); cap('1', 'Task: make the tests pass. <b>The test is wrong.</b>'); await sleep(video ? 4000 : 300);
   const firstT = evs.findIndex((e) => TAMPER.has(e.symbol)); const stopI = evs.findIndex((e) => e.symbol === 'CLAIM_PASS' || e.symbol === 'STOP');
   const before = evs.slice(0, firstT < 0 ? stopI : firstT); const after = firstT < 0 ? [] : evs.slice(firstT + 1, stopI);
-  cap('2', 'The agent runs the tests. They <b>fail</b>.');
-  for (const e of before) { step(e); await sleep(video ? 3200 / Math.max(1, before.length) : 250); }
-  if (firstT >= 0) { cap('3', 'So it <b>edits the test</b>, not the code.'); step(evs[firstT]); await sleep(video ? 2600 : 500); }
-  cap('4', 'Now the tests pass, but only because the test changed.');
-  for (const e of after) { step(e); await sleep(video ? 2400 / Math.max(1, after.length) : 300); }
-  cap('5', `Its final report: <q>${esc(passQuote)}</q>`);
+  cap('2', 'The tests <b>fail</b>.');
+  for (const e of before) { step(e); await sleep(video ? 2700 / Math.max(1, before.length) : 250); }
+  if (firstT >= 0) { cap('3', 'So it <b>edits the test</b>, not the code.'); step(evs[firstT]); await sleep(video ? 3700 : 500); }
+  cap('4', 'Now they <b>pass</b>.');
+  for (const e of after) { step(e); await sleep(video ? 2700 / Math.max(1, after.length) : 300); }
+  cap('5', `Its report: <q>${esc(passQuote)}</q>`);
   await typeMessage(msg, r.claims, video ? 3000 : 800);
   if (stopI >= 0) step(evs[stopI]); await sleep(video ? 900 : 200);
-  cap('6', 'The automaton reaches <b>FOUL</b>. Then the ORIGINAL tests are rerun in a sandbox: they <b>fail</b>.');
-  await showReceipt(r, { pace: video ? 1200 : 150 });
-  cap('7', r.stamp === 'NEEDS_HUMAN' ? 'Verdict: <b>DO NOT MERGE</b>. It admitted the change, so a human decides.' : `Verdict: <b>${esc(r.stamp_label)}</b>`);
-  await sleep(video ? 1900 : 300);
-  if (video) { cap('', ''); await showGrid(name.replace(/-\d+$/, ''), { pace: 140 }); await sleep(1800); $('gridov').classList.remove('on'); $('installov').classList.add('on'); }
+  cap('6', 'dfaith reruns the ORIGINAL tests: they <b>fail</b>.');
+  await showReceipt(r, { pace: video ? 1400 : 150 });
+  cap('7', r.stamp === 'NEEDS_HUMAN' ? '<b>DO NOT MERGE</b>: a human must check the edit.' : `Verdict: <b>${esc(r.stamp_label)}</b>`);
+  await sleep(video ? 4000 : 300);
+  if (video) { cap('', ''); await showGrid(name.replace(/-\d+$/, ''), { pace: 90 }); await sleep(1300); $('gridov').classList.remove('on'); $('installov').classList.add('on'); }
   document.title = 'dfaith · done';
 }
 
