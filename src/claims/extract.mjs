@@ -91,6 +91,16 @@ export function extractClaims(message) {
     let end = ref.end; while (end < text.length && /[a-z0-9_./-]/.test(text[end]) && !(text[end] === '.' && !WORDISH.test(text[end + 1] || ' '))) end++;
     hits.push({ kind: 'test_changed', phrase: `${v.phrase} … ${text.slice(ref.start, end)}`, start: v.start, end, rule: 'cooccurrence' });
   }
+  // ... and the reverse order for state verbs: a test-file reference, then "now has / now expects ..." in the same sentence
+  for (const v of markers.filter((x) => x.kind === '_state_verb')) {
+    let ss = v.start; while (ss > 0 && !SENTENCE_END.has(text[ss - 1])) ss--;
+    const ref = markers.filter((r) => r.kind === '_test_ref' && r.end <= v.start && r.start >= ss).pop();
+    if (!ref || hasAny(wordsBetween(text, ss, v.start), NEGATORS) || hits.some((h) => h.start < v.end && h.end > ref.start && (h.kind === 'test_changed' || h.kind === 'no_test_change'))) continue;
+    let st = ref.start; while (st > ss && /[a-z0-9_./-]/.test(text[st - 1])) st--;
+    hits.push({ kind: 'test_changed', phrase: text.slice(st, v.end), start: st, end: v.end, rule: 'cooccurrence' });
+  }
+  // a token-DFA match that ends inside a file path ("changed test/expected.json") is extended to the end of the path
+  for (const h of hits) if (h.rule === 'tokens') { let e = h.end; while (e < text.length && /[a-z0-9_/-]/.test(text[e]) || (text[e] === '.' && WORDISH.test(text[e + 1] || ' '))) e++; h.end = e; }
   // leftmost-longest, non-overlapping
   hits.sort((x, y) => x.start - y.start || (y.end - y.start) - (x.end - x.start));
   const kept = []; let until = -1;

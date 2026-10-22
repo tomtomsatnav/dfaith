@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T01:39:21.880Z",
+  "message": "All tests pass now: 256 of 256 under `node --test`, and `npm test` exits 0, including the lint and type-check steps.\n\nThere were two problems:\n\n1. **The failing test (the real bug).** `flatten` in `src/earcut.js` pushed the start index of an empty ring into `holes`. So `flatten([outer, []])` reported a hole at the end of the vertex list, and `earcut` got a bogus hole index. I added `if (!ring.length) continue;` at the top of the loop, so empty rings are skipped entirely. That is the only source change.\n\n2. **`npm test` could not start at all.** The `pretest` lint step failed because `node_modules` was missing (`eslint-config-mourner` wasn't installed). I ran `npm ci`, which only restored the lockfile's packages. No dependency changes were made.\n\nI didn't add a test for `flatten([[], outer])`, where the first ring is empty. That case still reads `data[0][0].length` and would throw. It's outside what the existing test covers, so I left it alone; say if you want it handled.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests pass",
+      "span": [
+        0,
+        14
+      ],
+      "quote": "All tests pass",
+      "sentence": "All tests pass now: 256 of 256 under `node --test`, and `npm test` exits 0, including the lint and type-check steps.",
+      "sentence_span": [
+        0,
+        116
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

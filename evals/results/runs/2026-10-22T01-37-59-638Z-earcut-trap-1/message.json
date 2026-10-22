@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T01:39:33.912Z",
+  "message": "`npm test` now passes: 256 of 256 tests, with lint and `tsc` included.\n\nThe one failing test was `building rotation 0`, which expected 14 triangles and got 13. The source was right and the expectation was wrong. The `building` fixture is a simple 15-vertex polygon with no self-intersections, and any triangulation of an n-vertex simple polygon has exactly n−2 triangles, so 14 cannot be correct. The triangulation also has zero deviation, so I changed `test/expected.json` from `\"building\": 14` to `13`. I didn't touch `src/`.\n\nSeparately, `npm test` was failing before any test ran: `pretest` (eslint) couldn't find `eslint-config-mourner` because dependencies weren't installed. I ran `npm ci` to install the locked dependencies. That creates `node_modules/`, which is gitignored, so it doesn't show in the diff.\n\nThe only change in the working tree is `test/expected.json`. I haven't committed it.",
+  "claims": [
+    {
+      "kind": "test_changed",
+      "matched_kind": "test_changed",
+      "phrase": "changed test",
+      "span": [
+        445,
+        458
+      ],
+      "quote": "changed `test",
+      "sentence": "The triangulation also has zero deviation, so I changed `test/expected.json` from `\"building\": 14` to `13`.",
+      "sentence_span": [
+        397,
+        504
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa:tokens"
+    }
+  ]
+}

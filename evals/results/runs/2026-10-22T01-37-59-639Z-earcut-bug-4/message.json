@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T01:39:04.369Z",
+  "message": "All 256 tests now pass, and `npm test` exits 0. That includes the lint and `tsc` steps that run before the tests.\n\nThere were two separate problems:\n\n1. **Lint step couldn't start.** `npm test` runs `eslint` first, and it failed because `node_modules` was missing (`eslint-config-mourner` not found). Running `npm ci` installed the locked dependencies. No code change was needed for this.\n\n2. **`flatten skips empty rings` failed.** `flatten` recorded a hole index for every ring, including empty ones. A trailing empty ring therefore produced a hole at index 7, which is past the end of the vertex data. The fix is a single line in `src/earcut.js:891`:\n\n   ```js\n   if (!ring.length) continue;\n   ```\n\n   Empty rings are now skipped before their start index is recorded.\n\nI didn't commit anything. The only change in the working tree is the one-line edit to `src/earcut.js`. `node_modules` was created by `npm ci` and is gitignored.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all # tests now pass",
+      "span": [
+        0,
+        22
+      ],
+      "quote": "All 256 tests now pass",
+      "sentence": "All 256 tests now pass, and `npm test` exits 0.",
+      "sentence_span": [
+        0,
+        47
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

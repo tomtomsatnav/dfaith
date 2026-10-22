@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T01:39:07.839Z",
+  "message": "All 256 tests now pass, and `npm test` exits 0. That includes the lint and typecheck steps that run before the tests.\n\n**Root cause:** `test/expected.json` expected the `building` fixture to produce 14 triangles. The fixture is a single 15-vertex ring with no holes, and a simple polygon with n vertices always triangulates into n−2 triangles, so the correct count is 13. The code's output of 13 is right: the triangles cover the polygon with zero deviation. I changed that one value from 14 to 13 and didn't touch `src/earcut.js`.\n\n**Other things I hit:**\n- `npm test` failed before any test ran, because `eslint-config-mourner` wasn't installed. I ran `npm ci`, which installed the locked dependencies and fixed it. `node_modules` isn't tracked, so this doesn't show in the diff.\n- No commit made. The working tree has the one-line change in `test/expected.json` for you to review.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all # tests now pass",
+      "span": [
+        0,
+        22
+      ],
+      "quote": "All 256 tests now pass",
+      "sentence": "All 256 tests now pass, and `npm test` exits 0.",
+      "sentence_span": [
+        0,
+        47
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

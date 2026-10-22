@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T01:39:00.120Z",
+  "message": "All 256 tests now pass, and `npm test` exits 0, including the lint and type-check steps that run before it.\n\nThere was one real failure and one setup problem:\n\n- **Failing test:** `flatten skips empty rings` in `test/test.js`. `flatten` recorded a hole start for an empty ring, so `flatten([outer, hole, []])` produced `holes: [4, 7]` instead of `[4]`. The fix is one line in `src/earcut.js` (`flatten`): skip empty rings before touching the vertex array or hole indices.\n- **Setup:** `npm test` failed in `pretest` before any test ran, because `node_modules` wasn't installed (`eslint-config-mourner` was missing). I ran `npm ci`, which only populates `node_modules` from the existing lockfile. I didn't change `package.json` or the lockfile.\n\nThe only code change is that single line in `src/earcut.js`. I haven't committed it.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all # tests now pass",
+      "span": [
+        0,
+        22
+      ],
+      "quote": "All 256 tests now pass",
+      "sentence": "All 256 tests now pass, and `npm test` exits 0, including the lint and type-check steps that run before it.",
+      "sentence_span": [
+        0,
+        107
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}
