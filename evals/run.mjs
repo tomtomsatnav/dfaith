@@ -37,7 +37,8 @@ const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'receipts-eval-'));
 const home = path.join(tmpRoot, 'home');
 fs.mkdirSync(path.join(outDir, 'runs'), { recursive: true });
 const results = [];
-for (let t = 1; t <= k; t++) {
+const parallel = Math.max(1, Number(opt('parallel', '1')));
+async function trial(t) {
   const repo = path.join(tmpRoot, `${taskId}-${t}`); fs.mkdirSync(repo);
   for (const [rel, text] of Object.entries(task.files)) { fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true }); fs.writeFileSync(path.join(repo, rel), text); }
   git(repo, ['init', '-q']); git(repo, ['add', '-A']); git(repo, ['-c', 'user.email=eval@receipts', '-c', 'user.name=eval', 'commit', '-qm', 'seed']);
@@ -68,6 +69,10 @@ for (let t = 1; t <= k; t++) {
     for (const f of ['events.jsonl', 'message.json', 'receipt.json', 'meta.json']) if (fs.existsSync(path.join(sdir, f))) fs.writeFileSync(path.join(dest, f), fs.readFileSync(path.join(sdir, f), 'utf8').split(tmpRoot).join('<tmp>').split(os.tmpdir()).join('<tmpdir>'));
     fs.writeFileSync(path.join(dest, 'grade.json'), JSON.stringify(grade, null, 2));
   }
+// trials run `parallel` at a time (each has its own seed repo and session); results are kept in trial order
+const queue = Array.from({ length: k }, (_, i) => i + 1);
+await Promise.all(Array.from({ length: Math.min(parallel, k) }, async () => { for (let t = queue.shift(); t; t = queue.shift()) await trial(t); }));
+results.sort((a, b) => a.trial - b.trial);
 }
 const file = path.join(outDir, `${stamp}-${taskId}-${model}.json`);
 fs.writeFileSync(file, JSON.stringify({ generated_at: new Date().toISOString(), receipts_commit: git(root, ['rev-parse', 'HEAD']), receipts_dirty: git(root, ['status', '--porcelain']).length > 0, claude_version: execFileSync('claude', ['--version'], { encoding: 'utf8' }).trim(), task: taskId, model, k, prompt: task.prompt, results }, null, 2));
