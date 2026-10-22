@@ -12,6 +12,7 @@
   --text:#e8e1d2; --text2:#c2bcae; --muted:#a9a79f; --faint:#4a556c;
   --accent:#c4a35a; --accent-hi:#dcc07c; --ok:#7fbf8e; --warn:#d98e3a; --bad:#e5484d; --info:#c4a35a;
   --paper:#f1ece1; --paper2:#f7f3ea; --ink:#14181f; --ink2:#524f49;
+  --ease-out: cubic-bezier(0.23,1,0.32,1); --ease-expo: cubic-bezier(0.16,1,0.3,1); --ease-io: cubic-bezier(0.77,0,0.175,1);
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --sans: ui-sans-serif, "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -23,7 +24,6 @@
 :root{--chip-fail:#ffb3ba; --chip-pass:#b9e3c3; --active-fill:#2a2415; --tamper-fill:#3a2a12; --ok-fill:#16301f}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans)}
-body{background-image:radial-gradient(900px 480px at 50% -8%,rgba(196,163,90,.05),transparent 70%)}
 body{min-height:100vh}
 header{display:flex;align-items:baseline;gap:16px;padding:14px 22px;border-bottom:1px solid var(--line)}
 .brand{font:700 14px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--accent)}
@@ -38,38 +38,35 @@ main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;
 .ptitle span:last-child{text-transform:none;letter-spacing:0}
 svg{width:100%;height:auto;display:block}
 .edge{fill:none;stroke:var(--text);stroke-opacity:.07;stroke-width:1.2}
-.edge.hot{stroke:var(--accent-hi);stroke-opacity:.95;stroke-width:2.6;stroke-dasharray:6 5;animation:dash 0.9s linear infinite}
+.edge.hot{stroke:var(--accent-hi);stroke-opacity:.95;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:6 5;animation:dash 0.9s linear infinite}
 .edge.hot.badedge{stroke:var(--bad)}
 @keyframes dash{to{stroke-dashoffset:-22}}
-.node rect{fill:var(--panel2);stroke:var(--line2);stroke-width:1.2;transition:all .35s}
+.node rect{fill:var(--panel2);stroke:var(--line2);stroke-width:1.2;transition:fill .24s var(--ease-out),stroke .24s var(--ease-out),stroke-width .24s var(--ease-out)}
 .node .lbl{fill:var(--text);font-size:14px;font-weight:650}
 .node .sid{fill:var(--muted);font:10px var(--mono);letter-spacing:.06em}
 .node.visited rect{stroke:rgba(196,163,90,.45)}
 .node.active rect{fill:var(--active-fill);stroke:var(--accent-hi);stroke-width:3}
-.node.active{filter:drop-shadow(0 0 10px rgba(196,163,90,.45))}
 .node.out-tamper.active rect{fill:var(--tamper-fill);stroke:var(--warn)}
-.node.out-tamper.active{filter:drop-shadow(0 0 10px rgba(217,142,58,.5))}
 .node.out-ok.active rect{fill:var(--ok-fill);stroke:var(--ok)}
-.node.out-ok.active{filter:drop-shadow(0 0 10px rgba(127,191,142,.45))}
 .node.out-foul rect{stroke:#5a2730}
 .node.out-foul.active rect{fill:var(--bad);stroke:#ffd0d5;stroke-width:3.5}
 .node.out-foul.active .lbl,.node.out-foul.active .sid{fill:#fff}
-.node.out-foul.active{filter:drop-shadow(0 0 14px rgba(255,77,94,.85))}
+.node.out-foul.active rect{stroke-width:4}
 .node.out-false_claim.active rect,.node.out-unwitnessed.active rect{fill:#3b1f27;stroke:var(--bad)}
 .band{fill:var(--muted);font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase}
 .colh{fill:var(--text2);font-size:11px;text-anchor:middle}
 .marker{fill:var(--bad)}
 .strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;min-height:30px}
-.chip{font:12px var(--mono);letter-spacing:.04em;padding:4px 8px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);animation:pop .3s ease-out}
+.chip{font:12px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:.04em;padding:4px 8px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);animation:pop .3s ease-out}
 .chip.RUN_FAIL{color:var(--chip-fail);border-color:#5a2730}
 .chip.RUN_PASS{color:var(--chip-pass);border-color:#2c5a3a}
 .chip.tamper{color:#fff;background:var(--bad);border-color:var(--bad);font-weight:700}
 .chip.CLAIM_PASS{color:var(--accent-hi);border-color:rgba(196,163,90,.5)}
-@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes pop{from{transform:translateY(4px) scale(.96);opacity:0}to{transform:none;opacity:1}}
 .explain{font-size:14px;color:var(--text);margin-top:10px;min-height:22px}
 .explain .bad{color:var(--bad);font-weight:700}
 /* receipt */
-.receipt{position:relative;background:var(--paper);color:var(--ink);border-radius:6px;box-shadow:0 18px 50px -10px rgba(0,0,0,.75);padding:16px 18px 20px;min-height:560px;overflow:hidden;font-family:var(--sans)}
+.receipt{position:relative;background:var(--paper);color:var(--ink);border-radius:6px;transition:transform .16s var(--ease-out);padding:16px 18px 20px;min-height:560px;overflow:hidden;font-family:var(--sans)}
 .receipt h3{margin:0 0 2px;font:700 13px var(--mono);letter-spacing:.24em;text-transform:uppercase}
 .receipt .sub{font:11px var(--mono);color:#6d665a;margin-bottom:10px}
 .msg{font-size:13px;line-height:1.45;background:#fffaf0;border:1px dashed #cdbfa5;border-radius:8px;padding:10px 12px;white-space:pre-wrap;max-height:250px;overflow:hidden}
@@ -82,7 +79,7 @@ mark.k-no_test_change{background:#e7c9ff}
 .rows{margin-top:12px;display:grid;gap:8px}
 .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:10px;align-items:start;background:#fffdf7;border:1px solid #e0d5c1;border-radius:8px;padding:8px 10px;animation:pop .35s ease-out}
 .row .q{font-family:Georgia,serif;font-size:15px;font-style:italic}
-.row .q small{display:block;font:10px var(--mono);font-style:normal;color:#7c7464;margin-top:3px}
+.row .q small{display:block;font:11px var(--mono);font-variant-numeric:tabular-nums;font-style:normal;color:#7c7464;margin-top:3px}
 .row .r{font-size:12.5px;line-height:1.4}
 .verdict{display:inline-block;font:800 11px var(--mono);letter-spacing:.06em;padding:2px 6px;border-radius:4px;margin-bottom:4px}
 .v-contradicted{background:var(--bad);color:#fff}
@@ -91,12 +88,13 @@ mark.k-no_test_change{background:#e7c9ff}
 .v-unverifiable{background:#7c7464;color:#fff}
 .headrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:10px;font:10px var(--mono);color:#7c7464;text-transform:uppercase;letter-spacing:.08em;margin-top:12px}
 .path{font:11px var(--mono);color:#5b5446;margin-top:10px;line-height:1.5}
-.stamp{position:absolute;left:58%;top:auto;bottom:-14px;z-index:3;transform:translate(-50%,-50%) rotate(-7deg) scale(2.4);opacity:0;border:5px solid var(--bad);color:var(--bad);border-radius:10px;padding:6px 14px;font:900 40px var(--sans);letter-spacing:.04em;text-align:center;white-space:nowrap;background:rgba(244,239,228,.86);mix-blend-mode:multiply;pointer-events:none}
+.stamp{position:absolute;left:58%;top:auto;bottom:-14px;z-index:3;transform:translate(-50%,-50%) rotate(-6deg) scale(1.15);opacity:0;border:5px solid var(--bad);color:var(--bad);border-radius:10px;padding:6px 14px;font:900 40px var(--sans);letter-spacing:.04em;text-align:center;white-space:nowrap;background:rgba(244,239,228,.86);mix-blend-mode:multiply;pointer-events:none}
 .stamp small{display:block;font:800 12px var(--mono);letter-spacing:.12em}
 .stamp.ok{border-color:#11845a;color:#11845a}
 .stamp.na{border-color:#7c7464;color:#7c7464}
-.stamp.on{animation:slam .45s cubic-bezier(.2,1.6,.4,1) forwards}
-@keyframes slam{to{opacity:.93;transform:translate(-50%,-50%) rotate(-7deg) scale(1)}}
+.stamp.on{animation:slam .22s var(--ease-out) forwards}
+@keyframes slam{from{opacity:0;filter:blur(6px);transform:translate(-50%,-50%) rotate(-6deg) scale(1.15)}to{opacity:.94;filter:blur(0);transform:translate(-50%,-50%) rotate(-6deg) scale(1)}}
+.receipt.pressed{transform:translateY(2px)}
 .empty{color:#7c7464;font-size:13px}
 /* overlays */
 .overlay{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;padding:28px;z-index:5}
@@ -115,6 +113,24 @@ mark.k-no_test_change{background:#e7c9ff}
 .tag{margin-top:22px;font-size:20px;color:var(--muted);text-align:center}
 .tag b{color:var(--text)}
 select,button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:13px var(--sans)}
+.caption-bar{position:fixed;left:0;right:0;bottom:0;z-index:4;padding:18px 28px 22px;background:linear-gradient(to top,rgba(10,14,23,.97) 70%,rgba(10,14,23,0));font:600 30px/1.15 var(--sans);letter-spacing:-.01em;color:var(--text);text-wrap:balance;opacity:0;transform:translateY(8px);transition:opacity .3s var(--ease-out),transform .3s var(--ease-out);pointer-events:none}
+.caption-bar.on{opacity:1;transform:none}
+.caption-bar b{color:var(--bad);font-weight:700}
+.caption-bar .n{font:600 14px var(--mono);color:var(--accent);letter-spacing:.12em;margin-right:12px;vertical-align:4px}
+/* 4:5 feed cut for the video: automaton above, receipt below */
+.v45 header{padding:10px 16px}.v45 .caption{font-size:13px}.v45 .mode{display:none}
+.v45 main{grid-template-columns:1fr;gap:10px;padding:10px 14px}
+.v45 .panel{padding:8px 10px}.v45 .ptitle span:last-child{display:none}
+.v45 #dfa{max-height:400px}
+.v45 .explain{display:none}.v45 .strip{margin-top:4px;min-height:24px}
+.v45 .receipt{min-height:0;padding:12px 14px 14px}
+.v45 .msg{max-height:120px;font-size:12.5px}
+.v45 .rows{margin-top:8px;gap:6px}.v45 .headrow{margin-top:8px}
+.v45 .row{padding:6px 9px}.v45 .row .q{font-size:16px}.v45 .row .r{font-size:13px}
+.v45 .path{display:none}
+.v45 .stamp{bottom:auto;top:62%;left:60%}
+.v45 .caption-bar{font-size:34px;padding:22px 26px 28px}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
 </head>
 <body>
@@ -141,6 +157,7 @@ select,button{background:var(--panel2);color:var(--text);border:1px solid var(--
     <div class="stamp" id="stamp"></div>
   </section>
 </main>
+<div class="caption-bar" id="capbar" aria-live="polite"></div>
 <div class="overlay" id="gridov"><div class="gridtitle" id="gridtitle"></div><div class="gridsub" id="gridsub"></div><div class="grid" id="grid"></div></div>
 <div class="overlay" id="installov">
   <div class="install"><span class="pr">$</span> claude plugin marketplace add tomtomsatnav/receipts &amp;&amp; claude plugin install receipts@receipts</div>
@@ -167,6 +184,7 @@ const SAY = {
 };
 let DFA = null; let state = 'NO_RUN'; const visited = new Set(['NO_RUN']); const hot = new Set();
 
+function caption(n, html) { const c = $('capbar'); if (!html) { c.classList.remove('on'); return; } c.innerHTML = `${n ? `<span class="n">${n}</span>` : ''}${html}`; c.classList.add('on'); }
 async function getJSON(u) { const r = await fetch(u); return r.json(); }
 
 function drawDFA() {
@@ -251,6 +269,7 @@ async function showReceipt(r, { pace = 0 } = {}) {
   if (r.foul?.cited?.length) $('path').textContent = `automaton: ${[r.foul.cited[0].from, ...r.foul.cited.map((t) => `—${t.symbol}→ ${t.to}`)].join(' ')}`;
   if (pace) await sleep(pace * 0.6);
   const [txt, cls] = STAMPTEXT(r); st.innerHTML = txt; st.className = `stamp ${cls}`; void st.offsetWidth; st.classList.add('on');
+  const card = $('receipt'); setTimeout(() => { card.classList.add('pressed'); setTimeout(() => card.classList.remove('pressed'), 160); }, 200);
 }
 function clearReceipt() { $('msg').innerHTML = '<span class="empty">The agent\'s final message appears here.</span>'; $('rows').innerHTML = ''; $('path').textContent = ''; $('stamp').className = 'stamp'; }
 

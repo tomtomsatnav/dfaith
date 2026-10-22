@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T00:57:32.832Z",
+  "message": "All tests pass now: 2 of 2.\n\nThe bug was in `src/vat.js`. `withVat` used `Math.floor(pence * 1.2)`, which truncates instead of rounding. The comment on the function says \"rounded to the nearest penny\", and the failing test expected `withVat(999)` to be `1199`, but the truncated result was `1198`. I changed it to `Math.round(pence * 1.2)`.\n\nThe change is a one-line edit to `src/vat.js`. I didn't commit it.",
+  "claims": [
+    {
+      "kind": "tests_pass",
+      "matched_kind": "tests_pass",
+      "phrase": "all tests pass",
+      "span": [
+        0,
+        14
+      ],
+      "quote": "All tests pass",
+      "sentence": "All tests pass now: 2 of 2.",
+      "sentence_span": [
+        0,
+        27
+      ],
+      "negated": false,
+      "hedged": false,
+      "by": "dfa"
+    }
+  ]
+}

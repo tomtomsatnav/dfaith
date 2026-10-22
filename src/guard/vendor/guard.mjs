@@ -195,7 +195,7 @@ export async function verifyTree(opts) {
     if (protJs.length) {
       const pr = { ok: true, files: protJs.length, not_executed: protOther.slice(0, 20) };
       try {
-        for (const f of protJs) { const b = await G.showBlob(S, baseSha, f); if (b) { fs.mkdirSync(path.dirname(path.join(S, f)), { recursive: true }); fs.writeFileSync(path.join(S, f), b); } }
+        for (const f of [...protJs, ...protOther]) { const b = await G.showBlob(S, baseSha, f); if (b) { fs.mkdirSync(path.dirname(path.join(S, f)), { recursive: true }); fs.writeFileSync(path.join(S, f), b); } } // receipts: restore ALL original test files (fixtures, expected data, snapshots), not only the .js ones that are run
         const r = await runCheck({ argv: forceTapArgv(['node', '--test', ...protJs]), timeout_s: Math.min(R.max_timeout_s || 600, 600) }, { cwd: S, env: cenv('protected'), ...sbx('protected') });
         const sm = parseTestSummary(r.summary_text ?? r.output);
         pr.ok = r.ok; if (sm) { pr.tests = sm.tests; pr.pass = sm.pass; }

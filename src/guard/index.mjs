@@ -46,10 +46,12 @@ export async function runGuard({ repo, base, checks = null, profile = 'node-libr
       const sb = sandboxStatus({ sandboxBin });
       if (!sb.ok) return notRan(`OS sandbox unavailable: ${sb.reason}`, sb.hint);
     }
+    const unsupported = !checks?.length ? await unsupportedRunner(repo, base) : null;
+    if (unsupported) return notRan(unsupported, 'receipts 0.1 reruns tests only for projects whose tests run with plain `node --test` and no installed dependencies (the sandboxed copy has no node_modules). Python, Go and Rust are not supported yet. The automaton and the claims still work.');
     if (!checks || !checks.length) {
       let derived;
       try { derived = await defaultChecks(repo, base, profile); } catch (e) { return notRan(`cannot derive a test command: ${String(e?.message || e).slice(0, 200)}`, CANNOT_JUDGE.bad_base); }
-      if (!derived.length) return notRan('no test command derivable at the base commit (needs a package.json or node test files; other languages are not supported)', 'pass checks: [{argv: [...], timeout_s}] explicitly');
+      if (!derived.length) return notRan('no test command derivable at the base commit (needs a package.json or node test files)', 'receipts 0.1 supports JavaScript projects tested with `node --test`; Python, Go and Rust are not supported yet');
       checks = derived;
     }
     let timer;
@@ -75,4 +77,21 @@ export async function runGuard({ repo, base, checks = null, profile = 'node-libr
   } catch (e) {
     return notRan(`guard error: ${String(e?.message || e).slice(0, 300)}`, 'this is a bug or an environment problem (git/tar missing?); the session was not judged');
   }
+}
+
+/**
+ * Why the sandboxed rerun would give a WRONG answer for this repo, or null if it can run. The sandboxed copy of the tree has
+ * no node_modules, so a test command that needs installed packages would fail for reasons that have nothing to do with the
+ * agent's change, and a false "tests fail" is worse than "unverifiable".
+ */
+export async function unsupportedRunner(repo, base) {
+  const { execFile } = await import('node:child_process');
+  const pkgText = await new Promise((resolve) => execFile('git', ['-c', 'core.hooksPath=/dev/null', 'show', `${base}:package.json`], { cwd: repo, encoding: 'utf8', env: { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' }, timeout: 5000 }, (e, out) => resolve(e ? null : out)));
+  if (pkgText == null) return null; // no package.json: the guard derives `node --test` from the test files, or nothing
+  let pkg; try { pkg = JSON.parse(pkgText); } catch { return 'package.json at the base commit is not valid JSON'; }
+  const script = pkg?.scripts?.test;
+  if (typeof script === 'string' && !/^\s*node\s+(--[\w=.-]+\s+)*--test(\s|$)/.test(script)) return `the test script \`${script.slice(0, 80)}\` is not plain \`node --test\` (it would need installed packages)`;
+  const deps = Object.keys(pkg?.dependencies || {});
+  if (deps.length) return `the package has runtime dependencies (${deps.slice(0, 3).join(', ')}${deps.length > 3 ? ', …' : ''}) that the sandboxed copy would not have`;
+  return null;
 }

@@ -39,6 +39,12 @@ export function classifyFileChange(rel, before, after) {
   if (!isTestPath(rel)) return [{ symbol: 'EDIT_SRC', evidence: { file: rel } }];
   if (before != null && after == null) return [{ symbol: 'DELETE_TEST', evidence: { file: rel } }];
   if (before == null) return [{ symbol: 'ADD_TEST', evidence: { file: rel, note: 'new test file' } }];
+  // an existing test DATA file (expected output, fixture, snapshot) is the expectation itself: changing it is an assertion change
+  if (!/\.([cm]?[jt]sx?|py|go|rb|java|kt|rs)$/.test(rel)) {
+    const d = lineDiff(before, after);
+    if (d.removed.length) return [{ symbol: 'EDIT_ASSERT', evidence: { file: rel, note: 'expected test data changed', removed: d.removed.slice(0, 3).map((l) => clip(l.trim())), added: d.added.slice(0, 3).map((l) => clip(l.trim())) } }];
+    return [{ symbol: 'ADD_TEST', evidence: { file: rel, note: 'test data added to', added: d.added.length } }];
+  }
   const d = lineDiff(before, after);
   const out = [];
   const skipsBefore = before.split('\n').filter(hasSkipMarker).length; const skipsAfter = after.split('\n').filter(hasSkipMarker).length;

@@ -18,7 +18,7 @@ const HARNESS_PATH = [
 ];
 
 export const isHarnessPath = (p) => HARNESS_PATH.some((r) => r.test(p));
-export const isTestPath = (p) => !isHarnessPath(p) && TEST_PATH.some((r) => r.test(p)) && !/(^|\/)(node_modules|\.git|fixtures?)\//.test(p);
+export const isTestPath = (p) => !isHarnessPath(p) && TEST_PATH.some((r) => r.test(p)) && !/(^|\/)(node_modules|\.git)\//.test(p); // fixtures count: the guard restores them too
 export const isWatchedPath = (p) => isTestPath(p) || isHarnessPath(p);
 
 /** package.json changes only matter when they touch how tests run. */

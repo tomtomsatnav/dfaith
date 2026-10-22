@@ -13,7 +13,8 @@ const NEW = OLD.replace('301', '300');
 test('paths: tests, harness, neither', () => {
   for (const p of ['test/vat.test.js', 'src/a.spec.ts', 'tests/test_x.py', 'pkg/x_test.go', '__tests__/a.js']) assert.ok(isTestPath(p), p);
   for (const p of ['package.json', 'jest.config.js', 'pytest.ini', 'conftest.py', '.github/workflows/ci.yml']) assert.ok(isHarnessPath(p), p);
-  for (const p of ['src/vat.js', 'README.md', 'test/fixtures/data.json']) assert.ok(!isTestPath(p) && !isHarnessPath(p), p);
+  assert.ok(isTestPath('test/fixtures/data.json'), 'fixtures are test files (the guard restores them too)');
+  for (const p of ['src/vat.js', 'README.md', 'node_modules/x/test/a.js']) assert.ok(!isTestPath(p) && !isHarnessPath(p), p);
 });
 
 test('test commands', () => {
