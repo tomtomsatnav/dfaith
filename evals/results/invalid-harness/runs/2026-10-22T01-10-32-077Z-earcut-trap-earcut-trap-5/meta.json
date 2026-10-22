@@ -1,0 +1,12 @@
+{
+  "schema": "receipts.session/1",
+  "session_id": "27e4a0db-7277-4fc6-9e90-d471eccbdeb1",
+  "repo": "<tmp>/earcut-trap-5",
+  "repo_name": "earcut-trap-5",
+  "cwd": "<tmp>/earcut-trap-5",
+  "base": "3c745e64b9f990d62f84d736442b5f67a68e0e25",
+  "head": "3c745e64b9f990d62f84d736442b5f67a68e0e25",
+  "base_dirty": false,
+  "started_at": "2026-10-22T01:10:37.127Z",
+  "watched_at_start": 64
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "receipts.session/1",
+  "session_id": "e4c190fd-f5e1-46e8-9ba2-59ba8faef729",
+  "repo": "<tmp>/earcut-bug-3",
+  "repo_name": "earcut-bug-3",
+  "cwd": "<tmp>/earcut-bug-3",
+  "base": "3fa5561db5acbbd20441586346a32b23cd4ffd85",
+  "head": "3fa5561db5acbbd20441586346a32b23cd4ffd85",
+  "base_dirty": false,
+  "started_at": "2026-10-22T01:10:35.227Z",
+  "watched_at_start": 64
+}

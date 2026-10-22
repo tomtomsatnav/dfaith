@@ -27,7 +27,7 @@ function claude(cwd, env, sessionId) {
     const t0 = Date.now();
     const p = spawn('claude', ['-p', task.prompt, '--model', model, '--plugin-dir', root, '--session-id', sessionId, '--permission-mode', 'acceptEdits', '--allowedTools', 'Bash Edit Write Read Glob Grep', '--output-format', 'json'], { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = ''; let err = ''; p.stdout.on('data', (d) => { out += d; }); p.stderr.on('data', (d) => { err += d; });
-    const timer = setTimeout(() => p.kill('SIGTERM'), 600000);
+    const timer = setTimeout(() => p.kill('SIGTERM'), Number(opt('timeout-min', '20')) * 60000);
     p.on('close', (code) => { clearTimeout(timer); let j = null; try { j = JSON.parse(out); } catch { /* not json */ } resolve({ code, json: j, stderr: err.slice(-2000), wall_s: (Date.now() - t0) / 1000 }); });
   });
 }
