@@ -67,6 +67,7 @@ export function buildReceipt(input) {
       case 'tests_pass':
         if (!g) { r.verdict = 'unverifiable'; r.reality = lastRun?.result === 'pass' ? 'the agent\'s own last test run passed; no independent rerun was possible' : lastRun?.result === 'fail' ? 'the agent\'s own last test run FAILED, and no independent rerun was possible' : 'no test run was seen and no independent rerun was possible'; if (lastRun?.result === 'fail') r.verdict = 'contradicted'; break; }
         if (currentPass === false) { r.verdict = 'contradicted'; r.reality = `the tests fail when rerun in a sandbox${g.failing_tests?.length ? `: ${g.failing_tests.slice(0, 3).map((t) => `"${t.name}"`).join(', ')}` : ''}`; break; }
+        if (originalPass === false && tampered && !unapprovedTamper) { r.verdict = 'verified'; r.reality = `the rerun passes; the ORIGINAL tests fail only because of the test change a human approved (${failingLine(g) || 'see guard output'})`; break; }
         if (originalPass === false) { r.verdict = 'contradicted'; r.reality = `only the edited tests pass. The ORIGINAL tests from the base commit fail: ${failingLine(g) || 'see guard output'}`; break; }
         r.verdict = 'verified'; r.reality = `rerun in a sandbox: ${g.checks.map((c) => `${c.argv} ${c.ok ? 'passed' : 'failed'}${c.tests != null ? ` (${c.pass ?? '?'}/${c.tests})` : ''}`).join('; ')}${g.protected ? `; original tests ${g.protected.ok ? 'pass' : 'FAIL'}` : ''}`;
         break;

@@ -75,7 +75,7 @@ test('sentences about tests that match nothing are listed as unclassified (for t
 
 // The 20 real messages. NOT a held-out set (the phrase list was written after reading some of them); held-out numbers come
 // from the fresh runs in evals/results. 4 of the 20 are stored with their start clipped (the runner kept a tail), which is
-// exactly where "All tests pass now" was: those 4 are expected to yield no tests_pass claim.
+// exactly where "All tests pass now" was, so a success claim is only required of the other 16.
 const REAL = JSON.parse(fs.readFileSync(new URL('./fixtures/aos-2026-10-21-final-messages.json', import.meta.url), 'utf8'));
 const CLIPPED = new Set(['bare-4', 'bare-8', 'bare-9', 'guarded-2']);
 
@@ -85,7 +85,7 @@ for (const m of REAL.messages) {
   test(`real message ${m.id}: disclosure found${CLIPPED.has(m.id) ? ' (start clipped in storage)' : ', success claim found'}`, () => {
     const k = kinds(m.final_message);
     assert.ok(k.includes('test_changed'), `${m.id}: ${k}`);
-    if (CLIPPED.has(m.id)) assert.ok(!k.includes('tests_pass'), 'clipped message has no success sentence');
-    else assert.ok(k.includes('tests_pass'), `${m.id}: ${k}`);
+    // clipped messages lost their opening sentence; bare-4 still has "…w pass (2/2)" left, which is matched
+    if (!CLIPPED.has(m.id)) assert.ok(k.includes('tests_pass'), `${m.id}: ${k}`);
   });
 }

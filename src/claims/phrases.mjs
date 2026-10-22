@@ -34,7 +34,7 @@ export const PHRASES = {
   tests_pass: [
     'all tests pass', 'all tests now pass', 'all tests are passing', 'all tests are now passing', 'all the tests pass', 'all the tests now pass',
     'all tests passed', 'all # tests pass', 'all # tests now pass', 'all # tests passed', 'all # tests are passing',
-    'tests pass now', 'tests now pass', 'tests are passing', 'tests are now passing', 'tests all pass', 'the test suite passes', 'the suite passes',
+    'tests pass now', 'tests now pass', 'the tests pass', 'the tests now pass', 'tests pass (#/#)', 'tests pass (# of #)', 'the tests are green', 'the test suite is green', 'tests are passing', 'tests are now passing', 'tests all pass', 'the test suite passes', 'the suite passes',
     'test suite is green', 'tests are green', 'everything passes', 'everything is green', 'all green', 'all passing',
     'now pass (#/#)', 'now pass (# of #)', 'pass (#/#)', 'passing (#/#)', '# of # pass', '# of # tests pass', '# of # passing',
     '# pass, # fail', '# passed, # failed', '# passing, # failing',
@@ -70,10 +70,11 @@ export const MARKERS = {
 };
 export const NO_BOUNDARY = new Set(['_test_ref']);
 
-// Token classes for the second-stage token DFA (tokens.mjs): VERB (DET | QUANT)* NOUN => test_changed.
-// It covers "changed that one assertion", "updated the single wrong expected value", ... without listing every combination.
+// Token classes for the second-stage token DFA (tokens.mjs): VERB (DET | QUANT)* NOUN, or the passive NOUN AUX+ VERB
+// ("the expected values are updated"), => test_changed. It covers "changed that one assertion", "updated the single wrong expected value", ... without listing every combination.
 export const TOKENS = {
-  VERB: [...CHANGE_VERBS, ...CHANGE_ING, ...CHANGE_BASE.filter((v) => v !== 'touch')],
+  VERB: [...CHANGE_VERBS, ...CHANGE_ING, ...CHANGE_BASE.filter((v) => v !== 'touch'), 'recalculated', 'recomputed', 'bumped', 'regenerated', 'reworked', 'swapped', 'flipped'],
+  AUX: ['is', 'are', 'was', 'were', 'has been', 'have been', 'had been', 'is now', 'are now', 'now'],
   DET: ['the', 'that', 'this', 'those', 'these', 'a', 'an', 'its', 'one', 'both'],
   QUANT: ['one', 'single', 'failing', 'wrong', 'incorrect', 'broken', 'bad', 'off-by-one', 'last', 'second', 'first', "test's", 'tests\'', 'old', 'stale', 'hard-coded', 'hardcoded'],
   NOUN: ['test', 'tests', 'test file', 'test case', 'test cases', 'test expectation', 'test assertion', 'assertion', 'assertions', 'expectation', 'expectations',

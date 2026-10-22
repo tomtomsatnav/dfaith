@@ -14,11 +14,11 @@ const SENTENCE_END = new Set(['.', '!', '?', '\n']);
  * markdown heading marks dropped; each run of digits -> '#'; each whitespace run -> ' ' (or '\n' if it contains a newline).
  * Returns {text, map} with map[i] = index in the original of normalised char i (map[text.length] = original length).
  */
-export function normalise(src) {
+export function normalise(src, { pattern = false } = {}) {
   const out = []; const map = [];
   for (let i = 0; i < src.length; i++) {
     let ch = src[i];
-    if (ch === '`' || ch === '*' || ch === '#') continue; // '#' only ever comes from digits below
+    if (ch === '`' || ch === '*' || (ch === '#' && !pattern)) continue; // in a message '#' only ever comes from digits; in a pattern it IS the digit placeholder
     if (/[‘’ʼ]/.test(ch)) ch = "'";
     else if (/[“”]/.test(ch)) ch = '"';
     if (/\d/.test(ch)) { const s = i; while (i + 1 < src.length && /\d/.test(src[i + 1])) i++; out.push('#'); map.push(s); continue; }
@@ -39,7 +39,7 @@ export function claimAutomaton() {
   if (compiled) return compiled;
   const patterns = []; const meta = [];
   for (const [kind, list] of [...Object.entries(PHRASES), ...Object.entries(MARKERS), ...Object.entries(TOKENS).map(([k, v]) => [`#${k}`, v])]) for (const phrase of new Set(list)) {
-    const text = normalise(phrase).text; meta.push({ kind, phrase: text }); patterns.push({ id: meta.length - 1, text });
+    const text = normalise(phrase, { pattern: true }).text; meta.push({ kind, phrase: text }); patterns.push({ id: meta.length - 1, text });
   }
   compiled = { ac: compileAhoCorasick(patterns), meta };
   return compiled;
